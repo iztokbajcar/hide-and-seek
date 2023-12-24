@@ -3,7 +3,7 @@ function load_map(map_name)
     minetest.log("<hs_maps> Loading test schematic from " .. map_path)
 
     local result = minetest.place_schematic(
-        {x=0, y=0, z=0},
+        {x=-100, y=0, z=-100},
         map_path
     )
 
@@ -42,16 +42,6 @@ minetest.register_privilege("hs_loadmap", {
 
 -- minetest.register_on_mods_loaded(load_map)
 minetest.register_on_generated(load_random_map)
-
-minetest.register_chatcommand("hs_loadmap", {
-    privs = {
-        hs_loadmap = true
-    },
-    description = "Loads a map",
-    func = function(name, param)
-        load_map(param)
-    end
-})
 
 hs_maps = {}
 hs_maps.map_loaded = false

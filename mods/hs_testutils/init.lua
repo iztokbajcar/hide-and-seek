@@ -40,6 +40,15 @@ function register_commands()
             savemap(param)
         end
     })
+    minetest.register_chatcommand("hs_loadmap", {
+        privs = {
+            hs_loadmap = true
+        },
+        description = "Loads a map",
+        func = function(name, param)
+            hs_maps.load_map(param)
+        end
+    })
 end
 
 minetest.register_on_mods_loaded(register_commands)
