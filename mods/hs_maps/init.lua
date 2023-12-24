@@ -1,13 +1,4 @@
-hs_maps = {}
-hs_maps.map_loaded = false
-
 function load_map(map_name)
-    -- if the map has already been loaded, return
-    if hs_maps.map_loaded then
-        return
-    end
-
-    -- 
     local map_path = minetest.get_modpath("hs_maps") .. "/schems/" .. map_name ..".mts"
     minetest.log("<hs_maps> Loading test schematic from " .. map_path)
 
@@ -25,6 +16,11 @@ function load_map(map_name)
 end
 
 function load_random_map()
+    -- if the map has already been loaded, return
+    if hs_maps.map_loaded then
+        return
+    end
+
     math.randomseed(os.clock())
     local r = math.random(0, 1)
 
@@ -32,10 +28,32 @@ function load_random_map()
     if r == 0 then
         load_map("test")
     else
-    
         load_map("test")
     end
 end
 
+----------------
+-- privileges --
+----------------
+minetest.register_privilege("hs_loadmap", {
+    description = "Allows the player to load maps",
+    give_to_singleplayer = true
+})
+
 -- minetest.register_on_mods_loaded(load_map)
 minetest.register_on_generated(load_random_map)
+
+minetest.register_chatcommand("hs_loadmap", {
+    privs = {
+        hs_loadmap = true
+    },
+    description = "Loads a map",
+    func = function(name, param)
+        load_map(param)
+    end
+})
+
+hs_maps = {}
+hs_maps.map_loaded = false
+hs_maps.load_map = load_map
+hs_maps.load_random_map = load_random_map
