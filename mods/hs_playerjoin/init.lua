@@ -1,6 +1,11 @@
-player_team = {}
+player_team = {}  -- maps player names to team names
+hider_hiding = {}  -- maps player names to whether they are hiding (stationary) or not
+hider_node_name = {}  -- which node is a hider using as their disguise
+hider_node_pos = {}  -- where is the node that the hider is using as their disguise
+hider_entity = {} -- the entity that is attached to the hider
 num_hiders = 0
 num_seekers = 0
+
 
 transparent = {"transparent.png", "transparent.png", "transparent.png", "transparent.png", "transparent.png", "transparent.png"}
 
@@ -19,10 +24,20 @@ function hide_player(player)
     })
 end
 
--- aligns player with the world coordinate system and
--- makes them face towards the positive z-axis
--- (to help hiders hide)
-function align_player(player)
+-- aligns the hider with the world coordinate system,
+-- makes them face towards the positive z-axis,
+-- makes their disguise invisible
+-- and spawns a new node at their location
+function put_hider_into_hiding(player)
+    local player_name = player:get_player_name()
+    if player_team[player_name] ~= "hider" then
+        return
+    end
+
+    if hider_hiding[player_name] then
+        return
+    end
+
     local pos = player:get_pos()
     local yaw = player:get_look_horizontal()
 
@@ -30,15 +45,68 @@ function align_player(player)
     local pos_x = math.round(pos.x)
     local pos_y = math.round(pos.y)
     local pos_z = math.round(pos.z)
-    player:set_pos({x=pos_x, y=pos_y, z=pos_z})
+    local new_pos = {x=pos_x, y=pos_y, z=pos_z}
+    player:set_pos(new_pos)
 
     -- change the player look direction
     player:set_look_horizontal(0)
+
+    -- hide the player and their block entity
+    local entity = hider_entity[player_name]
+    entity:set_properties({is_visible = false})
+    player:set_properties({pointable = false})
+
+    -- place a node at the player's position
+    local node_name = hider_node_name[player_name]
+    if node_name == nil then
+        node_name = "farming:straw"
+    end
+    minetest.set_node(new_pos, {name=node_name})
+    hider_node_pos[player_name] = new_pos
+    hider_hiding[player_name] = true
+
+    minetest.log(player_name .. " is now in hiding")
+end
+
+-- undoes the effects of put_hider_into_hiding
+function put_hider_out_of_hiding(player)
+    local player_name = player:get_player_name()
+
+    -- mark the player as not hiding
+    hider_hiding[player_name] = false
+
+    -- remove the node at the player's position
+    if hider_node_pos[player_name] ~= nil then
+        minetest.remove_node(hider_node_pos[player_name])
+    end
+
+    -- make the player and their block entity visible again
+    local entity = hider_entity[player_name]
+    entity:set_properties({is_visible = true})
+    player:set_properties({pointable = true})
+
+
+    minetest.log(player_name .. " is no longer in hiding")
+end
+
+function check_hider_movement()
+    for _, player in ipairs(minetest.get_connected_players()) do
+        local player_name = player:get_player_name()
+        if player_team[player_name] == "hider" and hider_hiding[player_name] == true then
+            -- check if the player is moving
+            local c = player:get_player_control()
+            if c["up"] or c["down"] or c["left"] or c["right"] or c["jump"] then
+               put_hider_out_of_hiding(player)
+            end
+        end
+    end
 end
 
 function add_to_hiders(player)
+    local player_name = player:get_player_name()
+
     -- table.insert(hiders, player)
-    player_team[player:get_player_name()] = "hider"
+    player_team[player_name] = "hider"
     num_hiders = num_hiders + 1
 
     hide_player(player)
@@ -52,9 +120,11 @@ function add_to_hiders(player)
     -- attach the player's disguise to them
     local player_pos = player:get_pos()
     local node = minetest.add_entity(player_pos, "hs_playerjoin:testentity")
+    hider_node_name[player_name] = "farming:straw"  -- TODO change later
     node:set_attach(player, "", {x=0, y=0, z=0})  -- half a node above the ground
+    hider_entity[player_name] = node
 
-    minetest.log(player:get_player_name() .. " is now a hider")
+    minetest.log(player_name .. " is now a hider")
 end
 
 function add_to_seekers(player)
@@ -97,7 +167,7 @@ minetest.register_entity("hs_playerjoin:testentity", {
         collisionbox = {-0.5, -0.5, -0.5, 0.5, 0.5, 0.5},
         selectionbox = {-0.5, -0.5, -0.5, 0.5, 0.5, 0.5},
         visual = "cube",
-        shaded = false,
+        shaded = true,
         show_on_minimap = false,
         textures = {
             "farming_straw.png",
@@ -111,9 +181,20 @@ minetest.register_entity("hs_playerjoin:testentity", {
 });
 
 minetest.register_on_punchnode(function(pos, node, puncher, pointed_thing)
-    local props = puncher:get_properties()
-
     if player_team[puncher:get_player_name()] == "hider" then
-        align_player(puncher)
+        -- if the puncher is a hider, put them in hiding
+        put_hider_into_hiding(puncher)
+    elseif player_team[puncher:get_player_name()] == "seeker" then
+        -- if the puncher is a seeker, check if they punched a node hiding a hider
+        -- if so, unhide the punched hider
+        for hider, hider_node in pairs(hider_node_pos) do
+            if hider_node.x == pos.x and hider_node.y == pos.y and hider_node.z == pos.z then
+                minetest.log("seeker " .. puncher:get_player_name() .. " punched hider " .. hider)
+                put_hider_out_of_hiding(minetest.get_player_by_name(hider))
+            end
+        end
     end
 end)
+
+-- periodically check for hider movement
+minetest.register_globalstep(check_hider_movement)
