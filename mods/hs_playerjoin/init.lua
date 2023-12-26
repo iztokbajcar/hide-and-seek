@@ -1,5 +1,6 @@
-hiders = {}
-seekers = {}
+player_team = {}
+num_hiders = 0
+num_seekers = 0
 
 transparent = {"transparent.png", "transparent.png", "transparent.png", "transparent.png", "transparent.png", "transparent.png"}
 
@@ -18,8 +19,26 @@ function hide_player(player)
     })
 end
 
+-- aligns player with the world coordinate system and
+-- makes them face towards the positive z-axis
+-- (to help hiders hide)
+function align_player(player)
+    local pos = player:get_pos()
+    local yaw = player:get_look_horizontal()
+
+    -- round every position component the to nearest integer
+    pos.x = math.round(pos.x)
+    pos.y = math.round(pos.y)
+    pos.z = math.round(pos.z)
+
+    -- change the player look direction
+    player:set_look_horizontal(0)
+end
+
 function add_to_hiders(player)
-    table.insert(hiders, player)
+    -- table.insert(hiders, player)
+    player_team[player:get_player_name()] = "hider"
+    num_hiders = num_hiders + 1
 
     hide_player(player)
 
@@ -38,7 +57,10 @@ function add_to_hiders(player)
 end
 
 function add_to_seekers(player)
-    table.insert(seekers, player)
+    -- table.insert(seekers, player)
+    player_team[player:get_player_name()] = "seeker"
+    num_seekers = num_seekers + 1
+
     minetest.log(player:get_player_name() .. " is now a seeker")
 end
 
@@ -46,10 +68,10 @@ function player_join(player)
     -- if the teams have a different number of players,
     -- assign the new player into the team with less players
     -- and pick a random team otherwise
-    minetest.log(#hiders .. " hiders, " .. #seekers .. " seekers")
-    if #hiders > #seekers then
+    minetest.log(num_hiders .. " hiders, " .. num_seekers .. " seekers")
+    if num_hiders > num_seekers then
         add_to_seekers(player)
-    elseif #seekers > #hiders then
+    elseif num_seekers > num_hiders then
         add_to_hiders(player)
     else
         math.randomseed(os.clock())
@@ -86,3 +108,11 @@ minetest.register_entity("hs_playerjoin:testentity", {
         },
     },
 });
+
+minetest.register_on_punchnode(function(pos, node, puncher, pointed_thing)
+    local props = puncher:get_properties()
+
+    if player_team[puncher:get_player_name()] == "hider" then
+        align_player(puncher)
+    end
+end)
