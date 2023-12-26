@@ -27,9 +27,10 @@ function align_player(player)
     local yaw = player:get_look_horizontal()
 
     -- round every position component the to nearest integer
-    pos.x = math.round(pos.x)
-    pos.y = math.round(pos.y)
-    pos.z = math.round(pos.z)
+    local pos_x = math.round(pos.x)
+    local pos_y = math.round(pos.y)
+    local pos_z = math.round(pos.z)
+    player:set_pos({x=pos_x, y=pos_y, z=pos_z})
 
     -- change the player look direction
     player:set_look_horizontal(0)
@@ -96,7 +97,7 @@ minetest.register_entity("hs_playerjoin:testentity", {
         collisionbox = {-0.5, -0.5, -0.5, 0.5, 0.5, 0.5},
         selectionbox = {-0.5, -0.5, -0.5, 0.5, 0.5, 0.5},
         visual = "cube",
-        shaded = true,
+        shaded = false,
         show_on_minimap = false,
         textures = {
             "farming_straw.png",
