@@ -102,6 +102,26 @@ function check_hider_movement()
     end
 end
 
+function damage_hider(hider, puncher, damage)
+    local hider_hp = hider:get_hp()
+    if hider_hp > 0 then
+        hider:set_hp(hider_hp - damage, {type = "punch", object = puncher})
+        minetest.log("Hider " .. hider:get_player_name() .. " damaged by " .. puncher:get_player_name())
+    end
+end
+
+function remove_hider_entity(hider)
+    -- get the entity
+    local entity = hider_entity[hider:get_player_name()]
+    entity:remove()
+end
+
+function on_hider_death(hider)
+    minetest.log("Hider " .. hider:get_player_name() .. " died")
+    -- remove the hider's entity
+    remove_hider_entity(hider)
+end
+
 function add_to_hiders(player)
     local player_name = player:get_player_name()
 
@@ -111,18 +131,18 @@ function add_to_hiders(player)
 
     hide_player(player)
 
-    -- make the player smaller (to fit inside 1x1x1 openings)
     player:set_properties({
-        collisionbox = {-0.4, 0.4, -0.4, 0.5, -0.4, 0.4},
+        collisionbox = {-0.4, 0.4, -0.4, 0.5, -0.4, 0.4},  -- make the player smaller (to fit inside 1x1x1 openings)
         eye_height = 0.25,
     })
 
     -- attach the player's disguise to them
     local player_pos = player:get_pos()
-    local node = minetest.add_entity(player_pos, "hs_playerjoin:testentity")
+    local entity = minetest.add_entity(player_pos, "hs_playerjoin:disguise_entity")
     hider_node_name[player_name] = "farming:straw"  -- TODO change later
-    node:set_attach(player, "", {x=0, y=0, z=0})  -- half a node above the ground
-    hider_entity[player_name] = node
+    entity:get_luaentity()._player_name = player_name
+    entity:set_attach(player, "", {x=0, y=0, z=0})
+    hider_entity[player_name] = entity
 
     minetest.log(player_name .. " is now a hider")
 end
@@ -160,8 +180,9 @@ end
 minetest.register_on_joinplayer(player_join)
 
 -- register the node entity
-minetest.register_entity("hs_playerjoin:testentity", {
+local disguise_entity = {
     initial_properties = {
+        hp_max = 999,
         physical = true,
         collide_with_objects = false,
         collisionbox = {-0.5, -0.5, -0.5, 0.5, 0.5, 0.5},
@@ -178,7 +199,17 @@ minetest.register_entity("hs_playerjoin:testentity", {
             "farming_straw.png",
         },
     },
-});
+    _player_name = nil
+}
+
+function disguise_entity:on_punch(puncher, time_from_last_punch, tool_capabilities, dir, damage)
+    local hider_name = self._player_name
+    local hider = minetest.get_player_by_name(hider_name)
+    minetest.log("Hider " .. hider_name .. " was punched")
+    damage_hider(hider, puncher, damage)
+end
+
+minetest.register_entity("hs_playerjoin:disguise_entity", disguise_entity)
 
 minetest.register_on_punchnode(function(pos, node, puncher, pointed_thing)
     if player_team[puncher:get_player_name()] == "hider" then
@@ -186,11 +217,12 @@ minetest.register_on_punchnode(function(pos, node, puncher, pointed_thing)
         put_hider_into_hiding(puncher)
     elseif player_team[puncher:get_player_name()] == "seeker" then
         -- if the puncher is a seeker, check if they punched a node hiding a hider
-        -- if so, unhide the punched hider
-        for hider, hider_node in pairs(hider_node_pos) do
+        -- if so, unhide the punched hider and damage them
+        for hider_name, hider_node in pairs(hider_node_pos) do
             if hider_node.x == pos.x and hider_node.y == pos.y and hider_node.z == pos.z then
-                minetest.log("seeker " .. puncher:get_player_name() .. " punched hider " .. hider)
-                put_hider_out_of_hiding(minetest.get_player_by_name(hider))
+                local hider = minetest.get_player_by_name(hider_name)
+                put_hider_out_of_hiding(hider)
+                damage_hider(hider, puncher, 3)
             end
         end
     end
@@ -198,3 +230,9 @@ end)
 
 -- periodically check for hider movement
 minetest.register_globalstep(check_hider_movement)
+
+minetest.register_on_dieplayer(function(player, reason)
+    if player_team[player:get_player_name()] == "hider" then
+        on_hider_death(player)
+    end
+end)
