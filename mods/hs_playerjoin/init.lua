@@ -111,9 +111,9 @@ function add_to_hiders(player)
 
     hide_player(player)
 
-    -- make the player shorter (to fit inside 1x1x1 openings)
+    -- make the player smaller (to fit inside 1x1x1 openings)
     player:set_properties({
-        collisionbox = {-0.5, 0.5, 0, 1, -0.5, 0.5},
+        collisionbox = {-0.4, 0.4, -0.4, 0.5, -0.4, 0.4},
         eye_height = 0.25,
     })
 
