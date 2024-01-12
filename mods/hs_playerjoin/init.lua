@@ -24,6 +24,21 @@ function hide_player(player)
     })
 end
 
+function unhide_player(player)
+    -- show the player's nametag
+    local c = player:get_nametag_attributes().color
+    c.a = 255
+    player:set_nametag_attributes({color = c})
+
+    -- set the player's default texture back
+    default.player_set_textures(player, nil)
+
+    -- make the player visible on the minimap
+    player:set_properties({
+        show_on_minimap = true
+    })
+end
+
 -- aligns the hider with the world coordinate system,
 -- makes them face towards the positive z-axis,
 -- makes their disguise invisible
@@ -176,6 +191,16 @@ function player_join(player)
     end
 end
 
+-- when a player respawns, send them to the spawn area
+function player_respawn(player)
+    pos = hs_maps.spawn_pos
+    pos.x = pos.x + 100
+    pos.y = pos.y + 1
+    pos.z = pos.z + 100
+    player:set_pos(pos)
+    return true
+end
+
 -- minetest.register_on_mods_loaded(register_hider_model)
 minetest.register_on_joinplayer(player_join)
 
@@ -236,3 +261,5 @@ minetest.register_on_dieplayer(function(player, reason)
         on_hider_death(player)
     end
 end)
+
+minetest.register_on_respawnplayer(player_respawn)
