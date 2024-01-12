@@ -207,7 +207,7 @@ minetest.register_on_joinplayer(player_join)
 -- register the node entity
 local disguise_entity = {
     initial_properties = {
-        hp_max = 999,
+        hp_max = 50,
         physical = true,
         collide_with_objects = false,
         collisionbox = {-0.5, -0.5, -0.5, 0.5, 0.5, 0.5},
@@ -229,6 +229,11 @@ local disguise_entity = {
 
 function disguise_entity:on_punch(puncher, time_from_last_punch, tool_capabilities, dir, damage)
     local hider_name = self._player_name
+
+    if hider_name == nil then
+        return
+    end
+
     local hider = minetest.get_player_by_name(hider_name)
     minetest.log("Hider " .. hider_name .. " was punched")
     damage_hider(hider, puncher, damage)
