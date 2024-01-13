@@ -170,6 +170,17 @@ function add_to_seekers(player)
     minetest.log(player:get_player_name() .. " is now a seeker")
 end
 
+function display_team_text_on_hud(player)
+    player:hud_add({
+        hud_elem_type = "text",
+        position = {x=0, y=1},
+        offset = {x=10, y=-10},
+        alignment = {x=1, y=-1},
+        text = "You are a " .. player_team[player:get_player_name()],
+        number = 0xFFFF00,
+    })
+end
+
 function player_join(player)
     -- if the teams have a different number of players,
     -- assign the new player into the team with less players
@@ -189,6 +200,8 @@ function player_join(player)
             add_to_seekers(player)
         end
     end
+
+    display_team_text_on_hud(player)
 end
 
 -- when a player respawns, send them to the spawn area
