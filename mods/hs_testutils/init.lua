@@ -1,5 +1,5 @@
 function nuke()
-    hs_maps.load_map("empty")
+    hs_maps.load_map("empty", {x=-100, y=0, z=-100})
     -- hs_maps.map_loaded = false
     minetest.log("<hs_testutils> Successfully nuked the map")
 end
@@ -46,7 +46,7 @@ function register_commands()
         },
         description = "Loads a map",
         func = function(name, param)
-            hs_maps.load_map(param)
+            hs_maps.load_map(param, {x=-100, y=0, z=-100})
         end
     })
 end
