@@ -1,22 +1,23 @@
-player_team = {}  -- maps player names to team names
-hider_hiding = {}  -- maps player names to whether they are hiding (stationary) or not
-hider_node_name = {}  -- which node is a hider using as their disguise (player name --> node name)
-hider_node_pos = {}  -- where is the node that the hider is using as their disguise
-hider_entity = {} -- the entity that is attached to the hider
-disguise_entities = {}  -- stores all defined disguise entities (entity name --> entity table)
+player_team = {}       -- maps player names to team names
+hider_hiding = {}      -- maps player names to whether they are hiding (stationary) or not
+hider_node_name = {}   -- which node is a hider using as their disguise (player name --> node name)
+hider_node_pos = {}    -- where is the node that the hider is using as their disguise
+hider_entity = {}      -- the entity that is attached to the hider
+disguise_entities = {} -- stores all defined disguise entities (entity name --> entity table)
 num_hiders = 0
 num_seekers = 0
 
 disguise_entity_prefix = "hs_playerjoin:disguise_entity_"
 default_disguise_node = "default:brick"
 
-transparent = {"transparent.png", "transparent.png", "transparent.png", "transparent.png", "transparent.png", "transparent.png"}
+transparent = { "transparent.png", "transparent.png", "transparent.png", "transparent.png", "transparent.png",
+    "transparent.png" }
 
 function hide_player(player)
     -- hide the player's nametag
     local c = player:get_nametag_attributes().color
-    c.a = 0  -- set alpha to 0 to make it completely transparent
-    player:set_nametag_attributes({color = c})
+    c.a = 0 -- set alpha to 0 to make it completely transparent
+    player:set_nametag_attributes({ color = c })
 
     -- make the player transparent
     default.player_set_textures(player, transparent)
@@ -31,7 +32,7 @@ function unhide_player(player)
     -- show the player's nametag
     local c = player:get_nametag_attributes().color
     c.a = 255
-    player:set_nametag_attributes({color = c})
+    player:set_nametag_attributes({ color = c })
 
     -- set the player's default texture back
     default.player_set_textures(player, nil)
@@ -64,18 +65,17 @@ function put_hider_into_hiding(player, node_name)
     local pos_x = math.round(pos.x)
     local pos_y = math.round(pos.y)
     local pos_z = math.round(pos.z)
-    local new_pos = {x=pos_x, y=pos_y, z=pos_z}
-    player:set_pos(new_pos)
+
 
     -- change the player look direction
     player:set_look_horizontal(0)
 
     -- hide the player and their block entity
     local entity = hider_entity[player_name]
-    
+
     if entity ~= nil then
-        entity:set_properties({is_visible = false})
-        player:set_properties({pointable = false})
+        entity:set_properties({ is_visible = false })
+        player:set_properties({ pointable = false })
         minetest.log("Hid the disguise entity for player " .. player_name)
     else
         minetest.warn("Could not find the active disguise entity for player " .. player_name)
@@ -86,9 +86,41 @@ function put_hider_into_hiding(player, node_name)
     if node_name == nil then
         node_name = node_name
     end
-    minetest.set_node(new_pos, {name=node_name})
+
+    local new_pos = { x = pos_x, y = pos_y, z = pos_z }
+    minetest.set_node(new_pos, { name = node_name })
     hider_node_pos[player_name] = new_pos
     hider_hiding[player_name] = true
+
+    -- move the player so they can see around their block
+    -- try to place the player into all neighboring
+    -- nodes until one is empty
+    local pos_offsets = {
+        0, 1, 0,
+        -1, 0, 0,
+        1, 0, 0,
+        0, 0, -1,
+        0, 0, 1,
+        0, -1, 0
+    }
+    local pos_offset_weight = 1 -- how far to actually move the player
+
+    for i = 1, 16, 3 do
+        local x_offset = pos_offsets[i]
+        local y_offset = pos_offsets[i + 1]
+        local z_offset = pos_offsets[i + 2]
+
+        -- check if the node is air
+        if minetest.get_node_or_nil({ x = pos_x + x_offset, y = pos_y + y_offset, z = pos_z + z_offset }).name == "air" then
+            pos_x = pos_x + (x_offset * pos_offset_weight)
+            pos_y = pos_y + (y_offset * pos_offset_weight)
+            pos_z = pos_z + (z_offset * pos_offset_weight)
+            break
+        end
+    end
+
+    local new_pos = { x = pos_x, y = pos_y, z = pos_z }
+    player:set_pos(new_pos)
 
     minetest.log(player_name .. " is now in hiding")
 end
@@ -134,7 +166,7 @@ function check_hider_movement()
             -- check if the player is moving
             local c = player:get_player_control()
             if c["up"] or c["down"] or c["left"] or c["right"] or c["jump"] then
-               put_hider_out_of_hiding(player)
+                put_hider_out_of_hiding(player)
             end
         end
     end
@@ -144,7 +176,7 @@ function damage_hider(hider, puncher, damage)
     local hider_hp = hider:get_hp()
 
     if hider_hp > 0 then
-        hider:set_hp(hider_hp - damage, {type = "punch", object = puncher.object})
+        hider:set_hp(hider_hp - damage, { type = "punch", object = puncher.object })
         minetest.log("Hider " .. hider:get_player_name() .. " damaged by " .. puncher:get_player_name())
     end
 end
@@ -164,7 +196,7 @@ end
 function attach_disguise_entity_to_player(entity, player)
     local player_name = player:get_player_name()
     entity:get_luaentity()._player_name = player_name
-    entity:set_attach(player, "", {x=0, y=0, z=0})
+    entity:set_attach(player, "", { x = 0, y = 0, z = 0 })
     hider_entity[player_name] = entity
 end
 
@@ -184,14 +216,14 @@ function add_to_hiders(player)
     hide_player(player)
 
     player:set_properties({
-        collisionbox = {-0.4, 0.4, -0.4, 0.5, -0.4, 0.4},  -- make the player smaller (to fit inside 1x1x1 openings)
+        collisionbox = { -0.4, 0.4, -0.4, 0.5, -0.4, 0.4 }, -- make the player smaller (to fit inside 1x1x1 openings)
         eye_height = 0.25,
     })
 
     -- attach the player's disguise to them
     -- we use a hardcoded default entity for the hider which
     -- they get when they join and retain it before they punch a node
-    -- but we could instead choose a random block 
+    -- but we could instead choose a random block
     local player_pos = player:get_pos()
     local entity = minetest.add_entity(player_pos, disguise_entity_prefix .. default_disguise_node:gsub(":", "_"))
     attach_punch_callback_to_disguise_entity(entity)
@@ -212,9 +244,9 @@ end
 function display_team_text_on_hud(player)
     player:hud_add({
         hud_elem_type = "text",
-        position = {x=0, y=1},
-        offset = {x=10, y=-10},
-        alignment = {x=1, y=-1},
+        position = { x = 0, y = 1 },
+        offset = { x = 10, y = -10 },
+        alignment = { x = 1, y = -1 },
         text = "You are a " .. player_team[player:get_player_name()],
         number = 0xFFFF00,
     })
@@ -232,7 +264,7 @@ function player_join(player)
     else
         math.randomseed(os.clock())
         local r = math.random(0, 1)
-        
+
         if r == 0 then
             add_to_hiders(player)
         else
@@ -276,7 +308,7 @@ function register_disguise_entity(node_name)
     if minetest.registered_nodes[node_name] == nil then
         return
     end
-    
+
     local node = minetest.registered_nodes[node_name]
     local entity_name = disguise_entity_prefix .. node_name:gsub(":", "_")
 
@@ -290,11 +322,11 @@ function register_disguise_entity(node_name)
     local entity_textures = {}
     if #node.tiles == 1 then
         local t = node.tiles[1]
-        entity_textures = {t, t, t, t, t, t}
+        entity_textures = { t, t, t, t, t, t }
     elseif #node.tiles == 2 then
         local t1 = node.tiles[1]
         local t2 = node.tiles[2]
-        entity_textures = {t1, t1, t2, t2, t2, t2}
+        entity_textures = { t1, t1, t2, t2, t2, t2 }
     else
         for _, t in pairs(node.tiles) do
             table.insert(entity_textures, t)
@@ -309,7 +341,7 @@ function register_disguise_entity(node_name)
         -- which contains the texture name, but also defines some additional
         -- properties; we need to extract the texture name in that case
         if type(entity_textures[i]) == "table" then
-            if  entity_textures[i].name ~= nil then
+            if entity_textures[i].name ~= nil then
                 entity_textures[i] = entity_textures[i].name
             elseif entity_textures[i].image ~= nil then
                 entity_textures[i] = entity_textures[i].image
@@ -323,8 +355,8 @@ function register_disguise_entity(node_name)
             hp_max = 50,
             physical = true,
             collide_with_objects = false,
-            collisionbox = {-0.5, -0.5, -0.5, 0.5, 0.5, 0.5},
-            selectionbox = {-0.5, -0.5, -0.5, 0.5, 0.5, 0.5},
+            collisionbox = { -0.5, -0.5, -0.5, 0.5, 0.5, 0.5 },
+            selectionbox = { -0.5, -0.5, -0.5, 0.5, 0.5, 0.5 },
             visual = "cube",
             shaded = true,
             show_on_minimap = false,
@@ -333,7 +365,7 @@ function register_disguise_entity(node_name)
         _player_name = nil
     }
 
-    
+
 
     -- register the entity
     minetest.register_entity(entity_name, disguise_entity)
@@ -343,7 +375,7 @@ end
 
 function on_disguise_entity_punch(self, puncher, time_from_last_punch, tool_capabilities, dir, damage)
     local hider_name = self._player_name
-    
+
     if hider_name == nil then
         return
     end
@@ -403,4 +435,3 @@ minetest.register_on_respawnplayer(player_respawn)
 
 -- register disguise entities for all nodes in the default mod
 register_disguise_entities_for_nodes_in_default_mod()
-
