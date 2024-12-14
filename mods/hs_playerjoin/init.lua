@@ -181,16 +181,18 @@ function damage_hider(hider, puncher, damage)
     end
 end
 
-function remove_hider_entity(hider)
+function remove_hider_entity(hider_name)
     -- get the entity
-    local entity = hider_entity[hider:get_player_name()]
+    local entity = hider_entity[hider_name]
     entity:remove()
+    minetest.log("Removed disguise entity for player " .. hider_name)
 end
 
 function on_hider_death(hider)
-    minetest.log("Hider " .. hider:get_player_name() .. " died")
+    local hider_name = hider:get_player_name()
+    minetest.log("Hider " .. hider_name .. " died")
     -- remove the hider's entity
-    remove_hider_entity(hider)
+    remove_hider_entity(hider_name)
 end
 
 function attach_disguise_entity_to_player(entity, player)
@@ -299,7 +301,7 @@ function player_leave(player)
     local player_name = player:get_player_name()
 
     if player_team[player_name] == "hider" then
-        remove_hider_entity(player)
+        remove_hider_entity(player_name)
     end
     remove_player(player_name)
 end
@@ -395,8 +397,6 @@ function register_disguise_entity(node_name)
         _player_name = nil
     }
 
-
-
     -- register the entity
     minetest.register_entity(entity_name, disguise_entity)
     disguise_entities[entity_name] = disguise_entity
@@ -465,3 +465,5 @@ minetest.register_on_respawnplayer(player_respawn)
 
 -- register disguise entities for all nodes in the default mod
 register_disguise_entities_for_nodes_in_default_mod()
+
+hs_playerjoin = {}
