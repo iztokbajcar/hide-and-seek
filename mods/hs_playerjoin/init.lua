@@ -275,6 +275,15 @@ function player_join(player)
     display_team_text_on_hud(player)
 end
 
+function player_leave(player)
+    -- if the player is a hider, remove their disguise entity
+    local player_name = player:get_player_name()
+
+    if player_team[player_name] == "hider" then
+        remove_hider_entity(player)
+    end
+end
+
 -- when a player respawns, send them to the spawn area
 function player_respawn(player)
     local pos = hs_maps.spawn_pos
@@ -292,6 +301,7 @@ end
 
 -- minetest.register_on_mods_loaded(register_hider_model)
 minetest.register_on_joinplayer(player_join)
+minetest.register_on_leaveplayer(player_leave)
 
 -- registers disguise entities for all nodes in the default mod
 function register_disguise_entities_for_nodes_in_default_mod()
