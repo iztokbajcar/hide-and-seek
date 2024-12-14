@@ -275,6 +275,25 @@ function player_join(player)
     display_team_text_on_hud(player)
 end
 
+function remove_player(player_name)
+    local team = player_team[player_name]
+
+    if player_team[player_name] == "hider" then
+        hider_hiding[player_name] = nil
+        hider_node_name[player_name] = nil
+        hider_node_pos[player_name] = nil
+        hider_entity[player_name] = nil
+        num_hiders = num_hiders - 1
+    elseif player_team[player_name] == "seeker" then
+        num_seekers = num_seekers - 1
+    end
+
+    player_team[player_name] = nil
+
+    minetest.log("Disconnected " .. team .. " " .. player_name)
+    minetest.log("New player count: " .. num_hiders .. " hider(s), " .. num_seekers .. " seeker(s)")
+end
+
 function player_leave(player)
     -- if the player is a hider, remove their disguise entity
     local player_name = player:get_player_name()
@@ -282,6 +301,7 @@ function player_leave(player)
     if player_team[player_name] == "hider" then
         remove_hider_entity(player)
     end
+    remove_player(player_name)
 end
 
 -- when a player respawns, send them to the spawn area
