@@ -1,9 +1,9 @@
 function load_map(map_name, pos)
-    local map_path = minetest.get_modpath("hs_maps") .. "/schems/" .. map_name ..".mts"
+    local map_path = minetest.get_modpath("hs_maps") .. "/schems/" .. map_name .. ".mts"
     minetest.log("<hs_maps> Loading test schematic from " .. map_path)
 
     local result = minetest.place_schematic(
-        {x=pos.x, y=pos.y, z=pos.z},
+        { x = pos.x, y = pos.y, z = pos.z },
         map_path
     )
 
@@ -15,29 +15,25 @@ function load_map(map_name, pos)
     end
 end
 
-function load_spawn()
-    load_map("test", hs_maps.spawn_pos)
+function load_lobby()
+    load_map("test", hs_maps.lobby_pos)
 end
 
 function load_random_map()
+    local maps = { "map1" }
     math.randomseed(os.clock())
-    local r = math.random(0, 1)
+    local r = math.random(1, #maps)
 
-    -- TODO change map names
-    if r == 0 then
-        load_map("test", hs_maps.map_pos)
-    else
-        load_map("test", hs_maps.map_pos)
-    end
+    load_map(maps[r], hs_maps.map_pos)
 end
 
-function load_spawn_and_random_map()
+function load_lobby_and_random_map()
     -- if the map has already been loaded, return
     if hs_maps.map_loaded then
         return
     end
 
-    load_spawn()
+    load_lobby()
     load_random_map()
 
     hs_maps.map_loaded = true
@@ -51,12 +47,12 @@ minetest.register_privilege("hs_loadmap", {
     give_to_singleplayer = true
 })
 
-minetest.register_on_generated(load_spawn_and_random_map)
+minetest.register_on_generated(load_lobby_and_random_map)
 
 hs_maps = {}
 hs_maps.map_loaded = false
 hs_maps.load_map = load_map
 hs_maps.load_random_map = load_random_map
-hs_maps.load_spawn_and_random_map = load_spawn_and_random_map
-hs_maps.map_pos = {x=-100, y=0, z=-100}
-hs_maps.spawn_pos = {x=10000, y=0, z=0}
+hs_maps.load_lobby_and_random_map = load_lobby_and_random_map
+hs_maps.map_pos = { x = -100, y = 0, z = -100 }
+hs_maps.lobby_pos = { x = 10000, y = 0, z = 0 }

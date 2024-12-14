@@ -4,6 +4,7 @@ hider_node_name = {}   -- which node is a hider using as their disguise (player 
 hider_node_pos = {}    -- where is the node that the hider is using as their disguise
 hider_entity = {}      -- the entity that is attached to the hider
 disguise_entities = {} -- stores all defined disguise entities (entity name --> entity table)
+hud_elements = {}      -- stores all hud elements of a player (player name --> (hud element name --> hud element id))
 num_hiders = 0
 num_seekers = 0
 
@@ -254,27 +255,61 @@ function display_team_text_on_hud(player)
     })
 end
 
-function player_join(player)
+function determine_player_team(player)
     -- if the teams have a different number of players,
     -- assign the new player into the team with less players
     -- and pick a random team otherwise
     minetest.log(num_hiders .. " hiders, " .. num_seekers .. " seekers")
     if num_hiders > num_seekers then
-        add_to_seekers(player)
+        return "seeker"
     elseif num_seekers > num_hiders then
-        add_to_hiders(player)
+        return "hider"
     else
         math.randomseed(os.clock())
         local r = math.random(0, 1)
 
         if r == 0 then
-            add_to_hiders(player)
+            return "hider"
         else
-            add_to_seekers(player)
+            return "seeker"
         end
+    end
+end
+
+function get_map_center_pos(map_pos)
+    return { x = map_pos.x + 100, y = map_pos.y + 3, z = map_pos.z + 100 }
+end
+
+function spawn_player_in_lobby(player) -- move the player a few blocks above the
+    -- center of the lobby area
+    local new_pos = get_map_center_pos(hs_maps.lobby_pos)
+    player:set_pos(new_pos)
+    minetest.log("Spawned player " .. player:get_player_name() .. " in lobby")
+end
+
+function spawn_player_in_game_map(player)
+    local new_pos = get_map_center_pos(hs_maps.map_pos)
+    player:set_pos(new_pos)
+    minetest.log("Spawned player " .. player:get_player_name() .. " onto the game map")
+end
+
+function add_player_to_game(player, team)
+    if team == "hider" then
+        add_to_hiders(player)
+    elseif team == "seeker" then
+        add_to_seekers(player)
     end
 
     display_team_text_on_hud(player)
+end
+
+function player_join(player)
+    if hs_gamesched.state == hs_gamesched.STATE_LOBBY then
+        on_lobby_start(player)
+    elseif hs_gamesched.state == hs_gamesched.STATE_HIDING then
+        -- determine the player's team
+        on_hiding_start(player)
+    end
 end
 
 function remove_player(player_name)
@@ -292,8 +327,12 @@ function remove_player(player_name)
 
     player_team[player_name] = nil
 
-    minetest.log("Disconnected " .. team .. " " .. player_name)
-    minetest.log("New player count: " .. num_hiders .. " hider(s), " .. num_seekers .. " seeker(s)")
+    if team == nil then
+        minetest.log("Disconnected player " .. player_name)
+    else
+        minetest.log("Disconnected " .. team .. " " .. player_name)
+        minetest.log("New player count: " .. num_hiders .. " hider(s), " .. num_seekers .. " seeker(s)")
+    end
 end
 
 function player_leave(player)
@@ -306,24 +345,69 @@ function player_leave(player)
     remove_player(player_name)
 end
 
--- when a player respawns, send them to the spawn area
+-- when a player respawns, send them to the lobby area
+-- if the lobby is active, otherwise spawn them into the game as a seeker
 function player_respawn(player)
-    local pos = hs_maps.spawn_pos
-    pos.x = pos.x + 100
-    pos.y = pos.y + 1
-    pos.z = pos.z + 100
-    player:set_pos(pos)
-
-    if player_team[player:get_player_name()] == "hider" then
-        put_hider_out_of_hiding(player)
+    if hs_gamesched.state == hs_gamesched.STATE_LOBBY then
+        on_lobby_start(player)
+    else
+        on_hiding_start(player, "seeker")
     end
-
     return true
 end
 
 -- minetest.register_on_mods_loaded(register_hider_model)
 minetest.register_on_joinplayer(player_join)
 minetest.register_on_leaveplayer(player_leave)
+
+
+-- handles the game state change to lobby
+function on_lobby_start(player)
+    -- if the player is a hider and is hiding,
+    -- put them out of hiding
+    local player_name = player:get_player_name()
+    if player_team[player_name] == "hider" and hider_hiding[player_name] then
+        put_hider_out_of_hiding(player)
+    end
+
+    unhide_player(player)
+    spawn_player_in_lobby(player)
+end
+
+function on_hiding_start(player, force_team)
+    -- if a team choice is being forced, use that team,
+    -- otherwise determine it based on the current player distribution
+    -- among teams
+    local team = force_team
+    if team == nil then
+        team = determine_player_team(player)
+    end
+
+    add_player_to_game(player, team)
+    spawn_player_in_game_map(player)
+end
+
+-- this function is called by gamesched when
+-- the game state changes
+function timer_callback()
+    if hs_gamesched.state == hs_gamesched.STATE_LOBBY then
+        -- move all players to the lobby
+        minetest.chat_send_all("Moving you to the lobby.")
+        for _, player in ipairs(minetest.get_connected_players()) do
+            on_lobby_start(player)
+        end
+    elseif hs_gamesched.state == hs_gamesched.STATE_HIDING then
+        minetest.chat_send_all("Moving you to the game map.")
+        for _, player in ipairs(minetest.get_connected_players()) do
+            on_hiding_start(player)
+        end
+    elseif hs_gamesched.state == hs_gamesched.STATE_SEEKING then
+        minetest.chat_send_all("The seekers have been released. Good luck!")
+    else
+        minetest.warning("Unknown game state: " .. hs_gamesched.state)
+        return
+    end
+end
 
 -- registers disguise entities for all nodes in the default mod
 function register_disguise_entities_for_nodes_in_default_mod()
@@ -467,3 +551,4 @@ minetest.register_on_respawnplayer(player_respawn)
 register_disguise_entities_for_nodes_in_default_mod()
 
 hs_playerjoin = {}
+hs_playerjoin.timer_callback = timer_callback
