@@ -3,6 +3,7 @@ hider_hiding = {}      -- maps player names to whether they are hiding (stationa
 hider_node_name = {}   -- which node is a hider using as their disguise (player name --> node name)
 hider_node_pos = {}    -- where is the node that the hider is using as their disguise
 hider_entity = {}      -- the entity that is attached to the hider
+hider_pos_offsets = {} -- the offset of the player's position from their hiding node (player name --> pos)
 disguise_entities = {} -- stores all defined disguise entities (entity name --> entity table)
 hud_elements = {}      -- stores all hud elements of a player (player name --> (hud element name --> hud element id))
 num_hiders = 0
@@ -13,6 +14,22 @@ default_disguise_node = "default:brick"
 
 transparent = { "transparent.png", "transparent.png", "transparent.png", "transparent.png", "transparent.png",
     "transparent.png" }
+
+function set_hider_properties(player)
+    player:set_properties({
+        collisionbox = { -0.4, 0.4, -0.4, 0.5, -0.5, 0.4 }, -- make the player smaller (to fit inside 1x1x1 openings)
+        selectionbox = { -0.4, 0.4, -0.4, 0.5, -0.5, 0.4 },
+        eye_height = 0.25,
+    })
+end
+
+function set_default_player_properties(player)
+    player:set_properties({
+        collisionbox = { -0.3, 0, -0.3, 0.3, 1.7, 0.3 },
+        selectionbox = { -0.3, 0, -0.3, 0.3, 1.7, 0.3, rotate = false },
+        eye_height = 1.625
+    })
+end
 
 function hide_player(player)
     -- hide the player's nametag
@@ -111,11 +128,21 @@ function put_hider_into_hiding(player, node_name)
         local y_offset = pos_offsets[i + 1]
         local z_offset = pos_offsets[i + 2]
 
+        local pos_offset_x = x_offset * pos_offset_weight
+        local pos_offset_y = y_offset * pos_offset_weight
+        local pos_offset_z = z_offset * pos_offset_weight
+
+        hider_pos_offsets[player_name] = {
+            x = pos_offset_x,
+            y = pos_offset_y,
+            z = pos_offset_z
+        }
+
         -- check if the node is air
         if minetest.get_node_or_nil({ x = pos_x + x_offset, y = pos_y + y_offset, z = pos_z + z_offset }).name == "air" then
-            pos_x = pos_x + (x_offset * pos_offset_weight)
-            pos_y = pos_y + (y_offset * pos_offset_weight)
-            pos_z = pos_z + (z_offset * pos_offset_weight)
+            pos_x = pos_x + pos_offset_x
+            pos_y = pos_y + pos_offset_y
+            pos_z = pos_z + pos_offset_z
             break
         end
     end
@@ -132,6 +159,17 @@ function put_hider_out_of_hiding(player)
 
     -- mark the player as not hiding
     hider_hiding[player_name] = false
+
+    -- restore the hider's position to the center of their entity
+    local pos = player:get_pos()
+    local pos_offset = hider_pos_offsets[player_name]
+
+    local pos_x = pos.x - pos_offset.x
+    local pos_y = pos.y - pos_offset.y
+    local pos_z = pos.z - pos_offset.z
+    local new_pos = { x = pos_x, y = pos_y, z = pos_z }
+    player:set_pos(new_pos)
+    hider_pos_offsets[player_name] = nil
 
     -- remove the node at the player's position
     if hider_node_pos[player_name] ~= nil then
@@ -185,7 +223,9 @@ end
 function remove_hider_entity(hider_name)
     -- get the entity
     local entity = hider_entity[hider_name]
+    entity:set_detach()
     entity:remove()
+    hider_entity[hider_name] = nil
     minetest.log("Removed disguise entity for player " .. hider_name)
 end
 
@@ -217,11 +257,7 @@ function add_to_hiders(player)
     num_hiders = num_hiders + 1
 
     hide_player(player)
-
-    player:set_properties({
-        collisionbox = { -0.4, 0.4, -0.4, 0.5, -0.4, 0.4 }, -- make the player smaller (to fit inside 1x1x1 openings)
-        eye_height = 0.25,
-    })
+    set_hider_properties(player)
 
     -- attach the player's disguise to them
     -- we use a hardcoded default entity for the hider which
@@ -234,6 +270,19 @@ function add_to_hiders(player)
     attach_disguise_entity_to_player(entity, player)
 
     minetest.log(player_name .. " is now a hider")
+end
+
+function remove_from_hiders(player)
+    local player_name = player:get_player_name()
+
+    remove_hider_entity(player_name)
+    set_default_player_properties(player)
+    unhide_player(player)
+
+    num_hiders = num_hiders - 1
+    player_team[player_name] = nil
+
+    minetest.log(player_name .. " is no longer a hider")
 end
 
 function add_to_seekers(player)
@@ -363,11 +412,17 @@ minetest.register_on_leaveplayer(player_leave)
 
 -- handles the game state change to lobby
 function on_lobby_start(player)
-    -- if the player is a hider and is hiding,
-    -- put them out of hiding
     local player_name = player:get_player_name()
     if player_team[player_name] == "hider" and hider_hiding[player_name] then
+        -- if the player is a hider and is hiding,
+        -- put them out of hiding
         put_hider_out_of_hiding(player)
+    end
+
+    if player_team[player_name] == "hider" then
+        -- remove the player form the hiders team
+        -- and restore their original properties
+        remove_from_hiders(player)
     end
 
     unhide_player(player)
