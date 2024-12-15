@@ -8,7 +8,7 @@ hud_elements = {}      -- stores all hud elements of a player (player name --> (
 num_hiders = 0
 num_seekers = 0
 
-disguise_entity_prefix = "hs_playerjoin:disguise_entity_"
+disguise_entity_prefix = "hs_players:disguise_entity_"
 default_disguise_node = "default:brick"
 
 transparent = { "transparent.png", "transparent.png", "transparent.png", "transparent.png", "transparent.png",
@@ -550,5 +550,5 @@ minetest.register_on_respawnplayer(player_respawn)
 -- register disguise entities for all nodes in the default mod
 register_disguise_entities_for_nodes_in_default_mod()
 
-hs_playerjoin = {}
-hs_playerjoin.timer_callback = timer_callback
+hs_players = {}
+hs_players.timer_callback = timer_callback

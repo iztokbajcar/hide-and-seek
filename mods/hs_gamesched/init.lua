@@ -21,7 +21,7 @@ function global_step(dtime)
         minetest.chat_send_all("Lobby time ended!")
         minetest.chat_send_all("Hiding time started!")
         hs_gamesched.state = hs_gamesched.STATE_HIDING
-        hs_playerjoin.timer_callback()
+        hs_players.timer_callback()
     elseif
         hs_gamesched.state == hs_gamesched.STATE_HIDING
         and hs_gamesched.timer_value > hide_time
@@ -30,7 +30,7 @@ function global_step(dtime)
         minetest.chat_send_all("Hiding time ended!")
         minetest.chat_send_all("Seeking time started!")
         hs_gamesched.state = hs_gamesched.STATE_SEEKING
-        hs_playerjoin.timer_callback()
+        hs_players.timer_callback()
     elseif
         hs_gamesched.state == hs_gamesched.STATE_SEEKING
         and hs_gamesched.timer_value > seek_time
@@ -39,7 +39,7 @@ function global_step(dtime)
         minetest.chat_send_all("Seeking time ended!")
         minetest.chat_send_all("Lobby time started!")
         hs_gamesched.state = hs_gamesched.STATE_LOBBY
-        hs_playerjoin.timer_callback()
+        hs_players.timer_callback()
     end
 end
 
