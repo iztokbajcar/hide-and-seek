@@ -116,12 +116,22 @@ function on_hiding_start(player, force_team)
     end
 
     add_player_to_game(player, team)
-    spawn_player_in_game_map(player)
+
+    -- spawn only hiders onto the game map, so they have time to hide
+    -- without the seekers seeing them
+    if player_team[player:get_player_name()] == "hider" then
+        spawn_player_in_game_map(player)
+    end
 end
 
 function on_seeking_start(player)
     -- update HUD
     update_game_state_hud_text(player, "Seeking time")
+
+    -- spawn seekers
+    if player_team[player:get_player_name()] == "seeker" then
+        spawn_player_in_game_map(player)
+    end
 end
 
 function timer_callback()
