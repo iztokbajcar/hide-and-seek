@@ -163,11 +163,20 @@ function game_state_callback()
         end
     elseif hs_gamesched.state == hs_gamesched.STATE_HIDING then
         core.chat_send_all("Moving you to the game map.")
-        -- TODO shuffle player list, so that they aren't always
-        -- put into the same team
-        for _, player in ipairs(core.get_connected_players()) do
-            on_hiding_start(player)
+
+        local not_yet_processed = {}
+        for i = 1, #(core.get_connected_players()) do
+            not_yet_processed[i] = i
         end
+
+        local i = math.random(1, #not_yet_processed)
+        while #not_yet_processed > 0 do
+            local player = core.get_connected_players()[not_yet_processed[i]]
+            on_hiding_start(player)
+            table.remove(not_yet_processed, i)
+            i = math.random(1, #not_yet_processed)
+        end
+
         for _, player in ipairs(core.get_connected_players()) do
             update_hud_for_round(player)
         end
