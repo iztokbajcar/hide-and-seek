@@ -96,7 +96,7 @@ function put_hider_into_hiding(player, node_name)
         player:set_properties({ pointable = false })
         minetest.log("Hid the disguise entity for player " .. player_name)
     else
-        minetest.warn("Could not find the active disguise entity for player " .. player_name)
+        minetest.log("warning", "Could not find the active disguise entity for player " .. player_name)
     end
 
     -- place a node at the player's position
@@ -270,6 +270,11 @@ function add_to_hiders(player)
     attach_disguise_entity_to_player(entity, player)
 
     minetest.log(player_name .. " is now a hider")
+
+    -- update the hider count HUD text for all players
+    for _, player in ipairs(minetest.get_connected_players()) do
+        update_hider_count_text(player, num_hiders)
+    end
 end
 
 function remove_from_hiders(player)
@@ -283,6 +288,11 @@ function remove_from_hiders(player)
     player_team[player_name] = nil
 
     minetest.log(player_name .. " is no longer a hider")
+
+    -- update the hider count HUD text for all players
+    for _, player in ipairs(minetest.get_connected_players()) do
+        update_hider_count_text(player, num_hiders)
+    end
 end
 
 function add_to_seekers(player)
@@ -291,17 +301,110 @@ function add_to_seekers(player)
     num_seekers = num_seekers + 1
 
     minetest.log(player:get_player_name() .. " is now a seeker")
+
+    -- update the seeker count HUD text for all players
+    for _, player in ipairs(minetest.get_connected_players()) do
+        update_hider_count_text(player, num_seekers)
+    end
 end
 
-function display_team_text_on_hud(player)
-    player:hud_add({
-        hud_elem_type = "text",
-        position = { x = 0, y = 1 },
-        offset = { x = 10, y = -10 },
-        alignment = { x = 1, y = -1 },
-        text = "You are a " .. player_team[player:get_player_name()],
-        number = 0xFFFF00,
-    })
+function remove_from_seekers(player)
+    player_team[player:get_player_name()] = nil
+    num_seekers = num_seekers - 1
+
+    minetest.log(player:get_player_name() .. " is no longer a seeker")
+
+    -- update the seeker count HUD text for all players
+    for _, player in ipairs(minetest.get_connected_players()) do
+        update_seeker_count_text(player, num_seekers)
+    end
+end
+
+function update_game_state_hud_text(player, text)
+    local player_name = player:get_player_name()
+    local game_state_hud = hud_elements[player_name]["game_state"]
+
+    if game_state_hud == nil then
+        minetest.log("warning", "Tried to update game state HUD text for player " .. player_name .. " but it was nil")
+        return
+    else
+        player:hud_change(game_state_hud, "text", text)
+    end
+end
+
+function update_game_state_timer_hud_text(player, text)
+    local player_name = player:get_player_name()
+    local state_timer_hud = hud_elements[player_name]["state_timer"]
+
+    if state_timer_hud == nil then
+        minetest.log("warning",
+            "Tried to update game state timer HUD text for player " .. player_name .. " but it was nil")
+        return
+    else
+        player:hud_change(state_timer_hud, "text", text)
+    end
+end
+
+function update_team_hud_text(player, text)
+    local player_name = player:get_player_name()
+    local team_hud = hud_elements[player_name]["team"]
+
+    if team_hud == nil then
+        minetest.log("warning", "Tried to update team HUD text for player " .. player_name .. " but it was nil")
+        return
+    else
+        player:hud_change(team_hud, "text", text)
+    end
+end
+
+function update_hider_count_text(player, text)
+    local player_name = player:get_player_name()
+    local hider_count_hud = hud_elements[player_name]["hider_count"]
+
+    if hider_count_hud == nil then
+        minetest.log("warning", "Tried to update hider count HUD text for player " .. player_name .. " but it was nil")
+        return
+    else
+        player:hud_change(hider_count_hud, "text", text)
+    end
+end
+
+function update_hider_count_desc_text(player, text)
+    local player_name = player:get_player_name()
+    local hider_count_desc_hud = hud_elements[player_name]["hider_count_desc"]
+
+    if hider_count_desc_hud == nil then
+        minetest.log("warning", "Tried to update hider count description HUD text for player " ..
+            player_name .. " but it was nil")
+        return
+    else
+        player:hud_change(hider_count_desc_hud, "text", text)
+    end
+end
+
+function update_seeker_count_text(player, text)
+    local player_name = player:get_player_name()
+    local seeker_count_hud = hud_elements[player_name]["seeker_count"]
+
+    if seeker_count_hud == nil then
+        minetest.log("warning", "Tried to update seekers count HUD text for player " .. player_name .. " but it was nil")
+        return
+    else
+        player:hud_change(seeker_count_hud, "text", text)
+    end
+end
+
+function update_seeker_count_desc_text(player, text)
+    local player_name = player:get_player_name()
+    local seeker_count_desc_hud = hud_elements[player_name]["seeker_count_desc"]
+
+    if seeker_count_desc_hud == nil then
+        minetest.log("warning", "Tried to update seekers count description HUD text for player " ..
+            player_name .. " but it was nil")
+        return
+    else
+        player:hud_change(seeker_count_desc_hud, "text", text)
+    end
 end
 
 function determine_player_team(player)
@@ -348,16 +451,96 @@ function add_player_to_game(player, team)
     elseif team == "seeker" then
         add_to_seekers(player)
     end
+end
 
-    display_team_text_on_hud(player)
+function setup_player_hud(player)
+    local player_name = player:get_player_name()
+    local team_text = player:hud_add({
+        type = "text",
+        position = { x = 0, y = 1 },
+        offset = { x = 10, y = -10 },
+        alignment = { x = 1, y = -1 },
+        text = "",
+        number = 0xFFFF00,
+    })
+
+    local game_state_text = player:hud_add({
+        type = "text",
+        position = { x = 1, y = 0.5 },
+        offset = { x = -100, y = 0 },
+        alignment = { x = 0, y = 0 },
+        text = "",
+        number = 0x00FF00,
+    })
+
+    local state_timer_text = player:hud_add({
+        type = "text",
+        position = { x = 1, y = 0.5 },
+        offset = { x = -100, y = 20 },
+        alignment = { x = 0, y = 0 },
+        text = "",
+        number = 0xFFFFFF,
+    })
+
+    local hider_count_text = player:hud_add({
+        type = "text",
+        position = { x = 1, y = 0.5 },
+        offset = { x = -120, y = 40 },
+        alignment = { x = -1, y = 0 },
+        text = "",
+        number = 0x00FFFF,
+    })
+
+    local hider_count_description_text = player:hud_add({
+        type = "text",
+        position = { x = 1, y = 0.5 },
+        offset = { x = -70, y = 40 },
+        aligment = { x = 1, y = 0 },
+        text = "",
+        number = 0xFFFFFF,
+    })
+
+    local seeker_count_text = player:hud_add({
+        type = "text",
+        position = { x = 1, y = 0.5 },
+        offset = { x = -120, y = 60 },
+        alignment = { x = -1, y = 0 },
+        text = "",
+        number = 0xFF0000,
+    })
+
+    local seeker_count_description_text = player:hud_add({
+        type = "text",
+        position = { x = 1, y = 0.5 },
+        offset = { x = -70, y = 60 },
+        aligment = { x = 1, y = 0 },
+        text = "",
+        number = 0xFFFFFF,
+    })
+
+    hud_elements[player_name] = {}
+    hud_elements[player_name]["team"] = team_text
+    hud_elements[player_name]["game_state"] = game_state_text
+    hud_elements[player_name]["state_timer"] = state_timer_text
+    hud_elements[player_name]["hider_count"] = hider_count_text
+    hud_elements[player_name]["hider_count_desc"] = hider_count_description_text
+    hud_elements[player_name]["seeker_count"] = seeker_count_text
+    hud_elements[player_name]["seeker_count_desc"] = seeker_count_description_text
 end
 
 function player_join(player)
+    setup_player_hud(player)
+
     if hs_gamesched.state == hs_gamesched.STATE_LOBBY then
         on_lobby_start(player)
-    elseif hs_gamesched.state == hs_gamesched.STATE_HIDING then
+        update_hud_for_lobby(player)
+    elseif
+        hs_gamesched.state == hs_gamesched.STATE_HIDING
+        or hs_gamesched.state == hs_gamesched.STATE_SEEKING
+    then
         -- determine the player's team
         on_hiding_start(player)
+        update_hud_for_round(player)
     end
 end
 
@@ -369,12 +552,14 @@ function remove_player(player_name)
         hider_node_name[player_name] = nil
         hider_node_pos[player_name] = nil
         hider_entity[player_name] = nil
+        hider_pos_offsets[player_name] = nil
         num_hiders = num_hiders - 1
     elseif player_team[player_name] == "seeker" then
         num_seekers = num_seekers - 1
     end
 
     player_team[player_name] = nil
+    hud_elements[player_name] = nil
 
     if team == nil then
         minetest.log("Disconnected player " .. player_name)
@@ -389,7 +574,9 @@ function player_leave(player)
     local player_name = player:get_player_name()
 
     if player_team[player_name] == "hider" then
-        remove_hider_entity(player_name)
+        remove_from_hiders(player)
+    elseif player_team[player_name] == "seeker" then
+        remove_from_seekers(player)
     end
     remove_player(player_name)
 end
@@ -410,6 +597,25 @@ minetest.register_on_joinplayer(player_join)
 minetest.register_on_leaveplayer(player_leave)
 
 
+function update_hud_for_lobby(player)
+    update_game_state_hud_text(player, "Lobby")
+    update_team_hud_text(player, "")
+    update_hider_count_text(player, "")
+    update_hider_count_desc_text(player, "")
+    update_seeker_count_text(player, "")
+    update_seeker_count_desc_text(player, "")
+end
+
+function update_hud_for_round(player)
+    local team = player_team[player:get_player_name()]
+    update_game_state_hud_text(player, "Hiding time")
+    update_team_hud_text(player, "You are a " .. team)
+    update_hider_count_text(player, num_hiders)
+    update_hider_count_desc_text(player, "hider(s)")
+    update_seeker_count_text(player, num_seekers)
+    update_seeker_count_desc_text(player, "seeker(s)")
+end
+
 -- handles the game state change to lobby
 function on_lobby_start(player)
     local player_name = player:get_player_name()
@@ -423,6 +629,9 @@ function on_lobby_start(player)
         -- remove the player form the hiders team
         -- and restore their original properties
         remove_from_hiders(player)
+    elseif player_team[player_name] == "seeker" then
+        -- remove the player from the seekers team
+        remove_from_seekers(player)
     end
 
     unhide_player(player)
@@ -442,24 +651,55 @@ function on_hiding_start(player, force_team)
     spawn_player_in_game_map(player)
 end
 
+function on_seeking_start(player)
+    -- update HUD
+    update_game_state_hud_text(player, "Seeking time")
+end
+
+function timer_callback()
+    -- update timer for all players
+    for _, player in ipairs(minetest.get_connected_players()) do
+        local time_left = hs_gamesched.timer_value
+        local s = nil
+        if time_left >= 10 then
+            s = string.format("%i", time_left)
+        else
+            s = string.format("%.1f", time_left)
+        end
+
+        update_game_state_timer_hud_text(player, "Time left: " .. s)
+    end
+end
+
 -- this function is called by gamesched when
 -- the game state changes
-function timer_callback()
+function game_state_callback()
     if hs_gamesched.state == hs_gamesched.STATE_LOBBY then
         -- move all players to the lobby
         minetest.chat_send_all("Moving you to the lobby.")
         for _, player in ipairs(minetest.get_connected_players()) do
             on_lobby_start(player)
         end
+        for _, player in ipairs(minetest.get_connected_players()) do
+            update_hud_for_lobby(player)
+        end
     elseif hs_gamesched.state == hs_gamesched.STATE_HIDING then
         minetest.chat_send_all("Moving you to the game map.")
+        -- TODO shuffle player list, so that they aren't always
+        -- put into the same team
         for _, player in ipairs(minetest.get_connected_players()) do
             on_hiding_start(player)
         end
+        for _, player in ipairs(minetest.get_connected_players()) do
+            update_hud_for_round(player)
+        end
     elseif hs_gamesched.state == hs_gamesched.STATE_SEEKING then
-        minetest.chat_send_all("The seekers have been released. Good luck!")
+        minetest.chat_send_all(minetest.colorize("#FFFF00", "The seekers have been released. Good luck!"))
+        for _, player in ipairs(minetest.get_connected_players()) do
+            on_seeking_start(player)
+        end
     else
-        minetest.warning("Unknown game state: " .. hs_gamesched.state)
+        minetest.log("warning", "Unknown game state: " .. hs_gamesched.state)
         return
     end
 end
@@ -607,3 +847,4 @@ register_disguise_entities_for_nodes_in_default_mod()
 
 hs_players = {}
 hs_players.timer_callback = timer_callback
+hs_players.game_state_callback = game_state_callback
