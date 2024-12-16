@@ -219,8 +219,20 @@ end
 function on_hider_death(hider)
     local hider_name = hider:get_player_name()
     core.log("Hider " .. hider_name .. " died")
+
     -- remove the hider's entity
     remove_hider_entity(hider_name)
+
+    -- check if there are any hiders left
+    -- note: when the last hider dies, they will still
+    -- remain in the hiders table
+    if num_hiders == 1 then
+        -- remove the hider from the hiders table
+        -- and end the game
+        remove_from_hiders(hider)
+        core.log("All hiders have died")
+        hs_gamesched.on_seeker_win()
+    end
 end
 
 function attach_disguise_entity_to_player(entity, player)

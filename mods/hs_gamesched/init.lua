@@ -31,7 +31,7 @@ function check_for_state_change()
             hs_gamesched.timer_value = SEEK_DURATION
             hs_players.game_state_callback()
         elseif hs_gamesched.state == hs_gamesched.STATE_SEEKING then
-            hs_utils.send_server_message("Round over!")
+            hs_utils.send_server_message("Hiders win!")
             hs_gamesched.state = hs_gamesched.STATE_LOBBY
             hs_gamesched.timer_value = LOBBY_DURATION
             hs_players.game_state_callback()
@@ -39,4 +39,13 @@ function check_for_state_change()
     end
 end
 
+function on_seeker_win()
+    hs_utils.send_server_message("Seekers win!")
+    hs_gamesched.state = hs_gamesched.STATE_LOBBY
+    hs_gamesched.timer_value = LOBBY_DURATION
+    hs_players.game_state_callback()
+end
+
 core.register_globalstep(global_step)
+
+hs_gamesched.on_seeker_win = on_seeker_win
