@@ -7,7 +7,7 @@ function add_to_seekers(player)
 
     -- update the seeker count HUD text for all players
     for _, player in ipairs(core.get_connected_players()) do
-        update_hider_count_text(player, num_seekers)
+        update_seeker_count_text(player, num_seekers)
     end
 end
 
