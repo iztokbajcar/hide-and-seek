@@ -140,6 +140,9 @@ end
 function put_hider_out_of_hiding(player)
     local player_name = player:get_player_name()
 
+    -- make the player pointable again
+    player:set_properties({ pointable = true })
+
     -- mark the player as not hiding
     hider_hiding[player_name] = false
 
