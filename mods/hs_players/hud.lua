@@ -78,7 +78,7 @@ function update_game_state_hud_text(player, text)
     local game_state_hud = hud_elements[player_name]["game_state"]
 
     if game_state_hud == nil then
-        minetest.log("warning", "Tried to update game state HUD text for player " .. player_name .. " but it was nil")
+        core.log("warning", "Tried to update game state HUD text for player " .. player_name .. " but it was nil")
         return
     else
         player:hud_change(game_state_hud, "text", text)
@@ -90,7 +90,7 @@ function update_game_state_timer_hud_text(player, text)
     local state_timer_hud = hud_elements[player_name]["state_timer"]
 
     if state_timer_hud == nil then
-        minetest.log("warning",
+        core.log("warning",
             "Tried to update game state timer HUD text for player " .. player_name .. " but it was nil")
         return
     else
@@ -103,7 +103,7 @@ function update_team_hud_text(player, text)
     local team_hud = hud_elements[player_name]["team"]
 
     if team_hud == nil then
-        minetest.log("warning", "Tried to update team HUD text for player " .. player_name .. " but it was nil")
+        core.log("warning", "Tried to update team HUD text for player " .. player_name .. " but it was nil")
         return
     else
         player:hud_change(team_hud, "text", text)
@@ -115,7 +115,7 @@ function update_hider_count_text(player, text)
     local hider_count_hud = hud_elements[player_name]["hider_count"]
 
     if hider_count_hud == nil then
-        minetest.log("warning", "Tried to update hider count HUD text for player " .. player_name .. " but it was nil")
+        core.log("warning", "Tried to update hider count HUD text for player " .. player_name .. " but it was nil")
         return
     else
         player:hud_change(hider_count_hud, "text", text)
@@ -127,7 +127,7 @@ function update_hider_count_desc_text(player, text)
     local hider_count_desc_hud = hud_elements[player_name]["hider_count_desc"]
 
     if hider_count_desc_hud == nil then
-        minetest.log("warning", "Tried to update hider count description HUD text for player " ..
+        core.log("warning", "Tried to update hider count description HUD text for player " ..
             player_name .. " but it was nil")
         return
     else
@@ -140,7 +140,7 @@ function update_seeker_count_text(player, text)
     local seeker_count_hud = hud_elements[player_name]["seeker_count"]
 
     if seeker_count_hud == nil then
-        minetest.log("warning", "Tried to update seekers count HUD text for player " .. player_name .. " but it was nil")
+        core.log("warning", "Tried to update seekers count HUD text for player " .. player_name .. " but it was nil")
         return
     else
         player:hud_change(seeker_count_hud, "text", text)
@@ -152,7 +152,7 @@ function update_seeker_count_desc_text(player, text)
     local seeker_count_desc_hud = hud_elements[player_name]["seeker_count_desc"]
 
     if seeker_count_desc_hud == nil then
-        minetest.log("warning", "Tried to update seekers count description HUD text for player " ..
+        core.log("warning", "Tried to update seekers count description HUD text for player " ..
             player_name .. " but it was nil")
         return
     else

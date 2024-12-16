@@ -15,23 +15,23 @@ default_disguise_node = "default:brick"
 transparent = { "transparent.png", "transparent.png", "transparent.png", "transparent.png", "transparent.png",
     "transparent.png" }
 
-mod_path = minetest.get_modpath("hs_players")
+mod_path = core.get_modpath("hs_players")
 dofile(mod_path .. "/game_events.lua")
 dofile(mod_path .. "/hiders.lua")
 dofile(mod_path .. "/hud.lua")
 dofile(mod_path .. "/players.lua")
 dofile(mod_path .. "/seekers.lua")
 
--- minetest.register_on_mods_loaded(register_hider_model)
-minetest.register_on_joinplayer(player_join)
-minetest.register_on_leaveplayer(player_leave)
-minetest.register_on_respawnplayer(player_respawn)
-minetest.register_on_dieplayer(player_die)
+-- core.register_on_mods_loaded(register_hider_model)
+core.register_on_joinplayer(player_join)
+core.register_on_leaveplayer(player_leave)
+core.register_on_respawnplayer(player_respawn)
+core.register_on_dieplayer(player_die)
 
-minetest.register_on_punchnode(on_node_punched)
+core.register_on_punchnode(on_node_punched)
 
 -- periodically check for hider movement
-minetest.register_globalstep(check_hider_movement)
+core.register_globalstep(check_hider_movement)
 
 -- register disguise entities for all nodes in the default mod
 register_disguise_entities_for_nodes_in_default_mod()

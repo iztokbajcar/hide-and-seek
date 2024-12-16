@@ -21,20 +21,20 @@ end
 function check_for_state_change()
     if hs_gamesched.timer_value <= 0 then
         if hs_gamesched.state == hs_gamesched.STATE_LOBBY then
-            minetest.chat_send_all("Lobby time ended!")
-            minetest.chat_send_all("Hiding time started!")
+            core.chat_send_all("Lobby time ended!")
+            core.chat_send_all("Hiding time started!")
             hs_gamesched.state = hs_gamesched.STATE_HIDING
             hs_gamesched.timer_value = HIDE_DURATION
             hs_players.game_state_callback()
         elseif hs_gamesched.state == hs_gamesched.STATE_HIDING then
-            minetest.chat_send_all("Hiding time ended!")
-            minetest.chat_send_all("Seeking time started!")
+            core.chat_send_all("Hiding time ended!")
+            core.chat_send_all("Seeking time started!")
             hs_gamesched.state = hs_gamesched.STATE_SEEKING
             hs_gamesched.timer_value = SEEK_DURATION
             hs_players.game_state_callback()
         elseif hs_gamesched.state == hs_gamesched.STATE_SEEKING then
-            minetest.chat_send_all("Seeking time ended!")
-            minetest.chat_send_all("Lobby time started!")
+            core.chat_send_all("Seeking time ended!")
+            core.chat_send_all("Lobby time started!")
             hs_gamesched.state = hs_gamesched.STATE_LOBBY
             hs_gamesched.timer_value = LOBBY_DURATION
             hs_players.game_state_callback()
@@ -42,4 +42,4 @@ function check_for_state_change()
     end
 end
 
-minetest.register_globalstep(global_step)
+core.register_globalstep(global_step)

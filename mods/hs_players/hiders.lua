@@ -77,9 +77,9 @@ function put_hider_into_hiding(player, node_name)
     if entity ~= nil then
         entity:set_properties({ is_visible = false })
         player:set_properties({ pointable = false })
-        minetest.log("Hid the disguise entity for player " .. player_name)
+        core.log("Hid the disguise entity for player " .. player_name)
     else
-        minetest.log("warning", "Could not find the active disguise entity for player " .. player_name)
+        core.log("warning", "Could not find the active disguise entity for player " .. player_name)
     end
 
     -- place a node at the player's position
@@ -89,7 +89,7 @@ function put_hider_into_hiding(player, node_name)
     end
 
     local new_pos = { x = pos_x, y = pos_y, z = pos_z }
-    minetest.set_node(new_pos, { name = node_name })
+    core.set_node(new_pos, { name = node_name })
     hider_node_pos[player_name] = new_pos
     hider_hiding[player_name] = true
 
@@ -122,7 +122,7 @@ function put_hider_into_hiding(player, node_name)
         }
 
         -- check if the node is air
-        if minetest.get_node_or_nil({ x = pos_x + x_offset, y = pos_y + y_offset, z = pos_z + z_offset }).name == "air" then
+        if core.get_node_or_nil({ x = pos_x + x_offset, y = pos_y + y_offset, z = pos_z + z_offset }).name == "air" then
             pos_x = pos_x + pos_offset_x
             pos_y = pos_y + pos_offset_y
             pos_z = pos_z + pos_offset_z
@@ -133,7 +133,7 @@ function put_hider_into_hiding(player, node_name)
     local new_pos = { x = pos_x, y = pos_y, z = pos_z }
     player:set_pos(new_pos)
 
-    minetest.log(player_name .. " is now in hiding")
+    core.log(player_name .. " is now in hiding")
 end
 
 -- undoes the effects of put_hider_into_hiding
@@ -156,7 +156,7 @@ function put_hider_out_of_hiding(player)
 
     -- remove the node at the player's position
     if hider_node_pos[player_name] ~= nil then
-        minetest.remove_node(hider_node_pos[player_name])
+        core.remove_node(hider_node_pos[player_name])
     end
 
     -- change the player's entity to the new one
@@ -169,7 +169,7 @@ function put_hider_out_of_hiding(player)
     -- local entity = hider_entity[player_name]
     local node_name = hider_node_name[player_name]
     local entity_name = disguise_entity_prefix .. node_name:gsub(":", "_")
-    local entity = minetest.add_entity(player:get_pos(), entity_name)
+    local entity = core.add_entity(player:get_pos(), entity_name)
 
     -- define the on_punch callback for the entity
     attach_punch_callback_to_disguise_entity(entity)
@@ -178,11 +178,11 @@ function put_hider_out_of_hiding(player)
     attach_disguise_entity_to_player(entity, player)
 
 
-    minetest.log(player_name .. " is no longer in hiding")
+    core.log(player_name .. " is no longer in hiding")
 end
 
 function check_hider_movement()
-    for _, player in ipairs(minetest.get_connected_players()) do
+    for _, player in ipairs(core.get_connected_players()) do
         local player_name = player:get_player_name()
         if player_team[player_name] == "hider" and hider_hiding[player_name] == true then
             -- check if the player is moving
@@ -199,7 +199,7 @@ function damage_hider(hider, puncher, damage)
 
     if hider_hp > 0 then
         hider:set_hp(hider_hp - damage, { type = "punch", object = puncher.object })
-        minetest.log("Hider " .. hider:get_player_name() .. " damaged by " .. puncher:get_player_name())
+        core.log("Hider " .. hider:get_player_name() .. " damaged by " .. puncher:get_player_name())
     end
 end
 
@@ -209,12 +209,12 @@ function remove_hider_entity(hider_name)
     entity:set_detach()
     entity:remove()
     hider_entity[hider_name] = nil
-    minetest.log("Removed disguise entity for player " .. hider_name)
+    core.log("Removed disguise entity for player " .. hider_name)
 end
 
 function on_hider_death(hider)
     local hider_name = hider:get_player_name()
-    minetest.log("Hider " .. hider_name .. " died")
+    core.log("Hider " .. hider_name .. " died")
     -- remove the hider's entity
     remove_hider_entity(hider_name)
 end
@@ -247,15 +247,15 @@ function add_to_hiders(player)
     -- they get when they join and retain it before they punch a node
     -- but we could instead choose a random block
     local player_pos = player:get_pos()
-    local entity = minetest.add_entity(player_pos, disguise_entity_prefix .. default_disguise_node:gsub(":", "_"))
+    local entity = core.add_entity(player_pos, disguise_entity_prefix .. default_disguise_node:gsub(":", "_"))
     attach_punch_callback_to_disguise_entity(entity)
     hider_node_name[player_name] = default_disguise_node
     attach_disguise_entity_to_player(entity, player)
 
-    minetest.log(player_name .. " is now a hider")
+    core.log(player_name .. " is now a hider")
 
     -- update the hider count HUD text for all players
-    for _, player in ipairs(minetest.get_connected_players()) do
+    for _, player in ipairs(core.get_connected_players()) do
         update_hider_count_text(player, num_hiders)
     end
 end
@@ -270,17 +270,17 @@ function remove_from_hiders(player)
     num_hiders = num_hiders - 1
     player_team[player_name] = nil
 
-    minetest.log(player_name .. " is no longer a hider")
+    core.log(player_name .. " is no longer a hider")
 
     -- update the hider count HUD text for all players
-    for _, player in ipairs(minetest.get_connected_players()) do
+    for _, player in ipairs(core.get_connected_players()) do
         update_hider_count_text(player, num_hiders)
     end
 end
 
 -- registers disguise entities for all nodes in the default mod
 function register_disguise_entities_for_nodes_in_default_mod()
-    for _, node in pairs(minetest.registered_nodes) do
+    for _, node in pairs(core.registered_nodes) do
         if node.drawtype == "normal" then
             register_disguise_entity(node.name)
         end
@@ -290,16 +290,16 @@ end
 -- registers a disguise entity for the given node
 function register_disguise_entity(node_name)
     -- check if the node is registered
-    if minetest.registered_nodes[node_name] == nil then
+    if core.registered_nodes[node_name] == nil then
         return
     end
 
-    local node = minetest.registered_nodes[node_name]
+    local node = core.registered_nodes[node_name]
     local entity_name = disguise_entity_prefix .. node_name:gsub(":", "_")
 
     -- check if the disguise entity has already been registered
     -- for this node
-    if minetest.registered_entities[entity_name] ~= nil then
+    if core.registered_entities[entity_name] ~= nil then
         return
     end
 
@@ -351,7 +351,7 @@ function register_disguise_entity(node_name)
     }
 
     -- register the entity
-    minetest.register_entity(entity_name, disguise_entity)
+    core.register_entity(entity_name, disguise_entity)
     disguise_entities[entity_name] = disguise_entity
-    minetest.log("Registered a disguise entity for node " .. node_name)
+    core.log("Registered a disguise entity for node " .. node_name)
 end

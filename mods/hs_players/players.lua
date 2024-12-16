@@ -2,7 +2,7 @@ function determine_player_team(player)
     -- if the teams have a different number of players,
     -- assign the new player into the team with less players
     -- and pick a random team otherwise
-    minetest.log(num_hiders .. " hiders, " .. num_seekers .. " seekers")
+    core.log(num_hiders .. " hiders, " .. num_seekers .. " seekers")
     if num_hiders > num_seekers then
         return "seeker"
     elseif num_seekers > num_hiders then
@@ -27,13 +27,13 @@ function spawn_player_in_lobby(player) -- move the player a few blocks above the
     -- center of the lobby area
     local new_pos = get_map_center_pos(hs_maps.lobby_pos)
     player:set_pos(new_pos)
-    minetest.log("Spawned player " .. player:get_player_name() .. " in lobby")
+    core.log("Spawned player " .. player:get_player_name() .. " in lobby")
 end
 
 function spawn_player_in_game_map(player)
     local new_pos = get_map_center_pos(hs_maps.map_pos)
     player:set_pos(new_pos)
-    minetest.log("Spawned player " .. player:get_player_name() .. " onto the game map")
+    core.log("Spawned player " .. player:get_player_name() .. " onto the game map")
 end
 
 function add_player_to_game(player, team)

@@ -1,16 +1,16 @@
 function load_map(map_name, pos)
-    local map_path = minetest.get_modpath("hs_maps") .. "/schems/" .. map_name .. ".mts"
-    minetest.log("<hs_maps> Loading test schematic from " .. map_path)
+    local map_path = core.get_modpath("hs_maps") .. "/schems/" .. map_name .. ".mts"
+    core.log("<hs_maps> Loading test schematic from " .. map_path)
 
-    local result = minetest.place_schematic(
+    local result = core.place_schematic(
         { x = pos.x, y = pos.y, z = pos.z },
         map_path
     )
 
     if result == nil then
-        minetest.log("error", "<hs_maps> Failed to load map '" .. map_name .. "'")
+        core.log("error", "<hs_maps> Failed to load map '" .. map_name .. "'")
     else
-        minetest.log("<hs_maps> Successfully loaded map '" .. map_name .. "'")
+        core.log("<hs_maps> Successfully loaded map '" .. map_name .. "'")
         hs_maps.map_loaded = true
     end
 end
@@ -42,12 +42,12 @@ end
 ----------------
 -- privileges --
 ----------------
-minetest.register_privilege("hs_loadmap", {
+core.register_privilege("hs_loadmap", {
     description = "Allows the player to load maps",
     give_to_singleplayer = true
 })
 
-minetest.register_on_generated(load_lobby_and_random_map)
+core.register_on_generated(load_lobby_and_random_map)
 
 hs_maps = {}
 hs_maps.map_loaded = false

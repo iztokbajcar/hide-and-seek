@@ -32,10 +32,10 @@ function remove_player(player_name)
     hud_elements[player_name] = nil
 
     if team == nil then
-        minetest.log("Disconnected player " .. player_name)
+        core.log("Disconnected player " .. player_name)
     else
-        minetest.log("Disconnected " .. team .. " " .. player_name)
-        minetest.log("New player count: " .. num_hiders .. " hider(s), " .. num_seekers .. " seeker(s)")
+        core.log("Disconnected " .. team .. " " .. player_name)
+        core.log("New player count: " .. num_hiders .. " hider(s), " .. num_seekers .. " seeker(s)")
     end
 end
 
@@ -110,7 +110,7 @@ end
 
 function timer_callback()
     -- update timer for all players
-    for _, player in ipairs(minetest.get_connected_players()) do
+    for _, player in ipairs(core.get_connected_players()) do
         local time_left = hs_gamesched.timer_value
         local s = nil
         if time_left >= 10 then
@@ -128,30 +128,30 @@ end
 function game_state_callback()
     if hs_gamesched.state == hs_gamesched.STATE_LOBBY then
         -- move all players to the lobby
-        minetest.chat_send_all("Moving you to the lobby.")
-        for _, player in ipairs(minetest.get_connected_players()) do
+        core.chat_send_all("Moving you to the lobby.")
+        for _, player in ipairs(core.get_connected_players()) do
             on_lobby_start(player)
         end
-        for _, player in ipairs(minetest.get_connected_players()) do
+        for _, player in ipairs(core.get_connected_players()) do
             update_hud_for_lobby(player)
         end
     elseif hs_gamesched.state == hs_gamesched.STATE_HIDING then
-        minetest.chat_send_all("Moving you to the game map.")
+        core.chat_send_all("Moving you to the game map.")
         -- TODO shuffle player list, so that they aren't always
         -- put into the same team
-        for _, player in ipairs(minetest.get_connected_players()) do
+        for _, player in ipairs(core.get_connected_players()) do
             on_hiding_start(player)
         end
-        for _, player in ipairs(minetest.get_connected_players()) do
+        for _, player in ipairs(core.get_connected_players()) do
             update_hud_for_round(player)
         end
     elseif hs_gamesched.state == hs_gamesched.STATE_SEEKING then
-        minetest.chat_send_all(minetest.colorize("#FFFF00", "The seekers have been released. Good luck!"))
-        for _, player in ipairs(minetest.get_connected_players()) do
+        core.chat_send_all(core.colorize("#FFFF00", "The seekers have been released. Good luck!"))
+        for _, player in ipairs(core.get_connected_players()) do
             on_seeking_start(player)
         end
     else
-        minetest.log("warning", "Unknown game state: " .. hs_gamesched.state)
+        core.log("warning", "Unknown game state: " .. hs_gamesched.state)
         return
     end
 end
@@ -159,7 +159,7 @@ end
 function on_node_punched(pos, node, puncher, pointed_thing)
     local puncher_name = puncher:get_player_name()
     if player_team[puncher_name] == "hider" then
-        local textures = minetest.registered_nodes[node["name"]].tiles
+        local textures = core.registered_nodes[node["name"]].tiles
 
         -- if the puncher is a hider and they are not already hiding,
         -- put them in hiding
@@ -185,7 +185,7 @@ function on_node_punched(pos, node, puncher, pointed_thing)
         -- if so, unhide the punched hider and damage them
         for hider_name, hider_node in pairs(hider_node_pos) do
             if hider_node.x == pos.x and hider_node.y == pos.y and hider_node.z == pos.z then
-                local hider = minetest.get_player_by_name(hider_name)
+                local hider = core.get_player_by_name(hider_name)
                 put_hider_out_of_hiding(hider)
                 damage_hider(hider, puncher, 3)
             end
@@ -200,7 +200,7 @@ function on_disguise_entity_punch(self, puncher, time_from_last_punch, tool_capa
         return
     end
 
-    local hider = minetest.get_player_by_name(hider_name)
-    minetest.log("Hider " .. hider_name .. " was punched by " .. puncher:get_player_name())
+    local hider = core.get_player_by_name(hider_name)
+    core.log("Hider " .. hider_name .. " was punched by " .. puncher:get_player_name())
     damage_hider(hider, puncher, damage)
 end
