@@ -149,7 +149,6 @@ function game_state_callback()
             update_hud_for_round(player)
         end
     elseif hs_gamesched.state == hs_gamesched.STATE_SEEKING then
-        core.chat_send_all(core.colorize("#FFFF00", "The seekers have been released. Good luck!"))
         for _, player in ipairs(core.get_connected_players()) do
             on_seeking_start(player)
         end
