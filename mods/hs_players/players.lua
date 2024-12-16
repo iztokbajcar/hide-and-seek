@@ -44,4 +44,5 @@ function add_player_to_game(player, team)
         add_to_seekers(player)
         hs_utils.send_private_message(player, "You are now a seeker.")
     end
+    update_hud_for_round(player)
 end

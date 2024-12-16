@@ -57,6 +57,10 @@ function player_respawn(player)
     if hs_gamesched.state == hs_gamesched.STATE_LOBBY then
         on_lobby_start(player)
     else
+        -- if the player was a hider, remove them from the team
+        if player_team[player:get_player_name()] == "hider" then
+            remove_from_hiders(player)
+        end
         on_hiding_start(player, "seeker")
     end
     return true

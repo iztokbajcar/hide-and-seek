@@ -206,6 +206,10 @@ end
 function remove_hider_entity(hider_name)
     -- get the entity
     local entity = hider_entity[hider_name]
+    if entity == nil then
+        return
+    end
+
     entity:set_detach()
     entity:remove()
     hider_entity[hider_name] = nil
