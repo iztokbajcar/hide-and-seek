@@ -34,6 +34,7 @@ function check_for_state_change()
             hs_utils.send_server_message("Hiders win!")
             hs_gamesched.state = hs_gamesched.STATE_LOBBY
             hs_gamesched.timer_value = LOBBY_DURATION
+            hs_players.hider_win_callback()
             hs_players.game_state_callback()
         end
     end
@@ -43,6 +44,7 @@ function on_seeker_win()
     hs_utils.send_server_message("Seekers win!")
     hs_gamesched.state = hs_gamesched.STATE_LOBBY
     hs_gamesched.timer_value = LOBBY_DURATION
+    hs_players.seeker_win_callback()
     hs_players.game_state_callback()
 end
 

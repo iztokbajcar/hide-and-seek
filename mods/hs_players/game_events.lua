@@ -1,4 +1,9 @@
 function player_join(player)
+    -- fetch the number of player's gems
+    local player_name = player:get_player_name()
+    local gems = get_gem_balance(player_name)
+    hs_utils.send_private_bank_message(player_name, "You have " .. gems .. " gems.")
+
     setup_player_hud(player)
 
     if hs_gamesched.state == hs_gamesched.STATE_LOBBY then
@@ -187,6 +192,40 @@ function game_state_callback()
     else
         core.log("warning", "Unknown game state: " .. hs_gamesched.state)
         return
+    end
+end
+
+function hider_win_callback()
+    -- give hiders a reward
+    reward_players_in_team_for_winning("hider")
+    reward_participants()
+end
+
+function seeker_win_callback()
+    -- give seekers a reward
+    reward_players_in_team_for_winning("seeker")
+    reward_participants()
+end
+
+function reward_players_in_team_for_winning(team)
+    for _, player in ipairs(core.get_connected_players()) do
+        local player_name = player:get_player_name()
+        if player_team[player_name] == team then
+            increase_gem_balance(player_name, hs_players.GEMS_WIN_REWARD)
+            local gems = get_gem_balance(player_name)
+            hs_utils.send_private_bank_message(player_name, "You received " ..
+                hs_players.GEMS_WIN_REWARD .. " gems for winning! You now have " .. gems .. " gems.")
+        end
+    end
+end
+
+function reward_participants()
+    for _, player in ipairs(core.get_connected_players()) do
+        local player_name = player:get_player_name()
+        increase_gem_balance(player_name, hs_players.GEMS_PARTICIPATION_REWARD)
+        local gems = get_gem_balance(player_name)
+        hs_utils.send_private_bank_message(player_name, "You received " ..
+            hs_players.GEMS_PARTICIPATION_REWARD .. " gems for participating! You now have " .. gems .. " gems.")
     end
 end
 

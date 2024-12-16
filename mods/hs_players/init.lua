@@ -17,6 +17,7 @@ transparent = { "transparent.png", "transparent.png", "transparent.png", "transp
 
 mod_path = core.get_modpath("hs_players")
 dofile(mod_path .. "/game_events.lua")
+dofile(mod_path .. "/gems.lua")
 dofile(mod_path .. "/hiders.lua")
 dofile(mod_path .. "/hud.lua")
 dofile(mod_path .. "/players.lua")
@@ -39,3 +40,7 @@ register_disguise_entities_for_nodes_in_default_mod()
 hs_players = {}
 hs_players.timer_callback = timer_callback
 hs_players.game_state_callback = game_state_callback
+hs_players.hider_win_callback = hider_win_callback
+hs_players.seeker_win_callback = seeker_win_callback
+hs_players.GEMS_WIN_REWARD = 10
+hs_players.GEMS_PARTICIPATION_REWARD = 5

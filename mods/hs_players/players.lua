@@ -39,10 +39,10 @@ end
 function add_player_to_game(player, team)
     if team == "hider" then
         add_to_hiders(player)
-        hs_utils.send_private_message(player, "You are now a hider.")
+        hs_utils.send_private_message(player:get_player_name(), "You are now a hider.")
     elseif team == "seeker" then
         add_to_seekers(player)
-        hs_utils.send_private_message(player, "You are now a seeker.")
+        hs_utils.send_private_message(player:get_player_name(), "You are now a seeker.")
     end
     update_hud_for_round(player)
 end

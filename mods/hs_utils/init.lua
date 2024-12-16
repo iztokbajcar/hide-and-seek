@@ -5,3 +5,4 @@ dofile(mod_path .. "/chat.lua")
 
 hs_utils.send_server_message = send_server_message
 hs_utils.send_private_message = send_private_message
+hs_utils.send_private_bank_message = send_private_bank_message
