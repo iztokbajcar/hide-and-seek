@@ -88,6 +88,9 @@ function on_lobby_start(player)
 
     unhide_player(player)
     spawn_player_in_lobby(player)
+
+    -- clear objects (e.g. potential leftover disguise entities on the map)
+    core.clear_objects()
 end
 
 function on_hiding_start(player, force_team)
