@@ -48,8 +48,10 @@ function gift_gems(sending_player_name, receiving_player_name, value_str)
     increase_gem_balance(sending_player_name, -value)
 
     local new_receiving_balance = get_gem_balance(receiving_player_name)
+    local new_sending_balance = get_gem_balance(sending_player_name)
 
-    send_private_bank_message(sending_player_name, "You gifted " .. receiving_player_name .. " " .. value .. " gems!")
+    send_private_bank_message(sending_player_name,
+        "You gifted " .. receiving_player_name .. " " .. value .. " gems! You now have " .. new_sending_balance .. ".")
     send_private_bank_message(receiving_player_name,
         "You received a gift of " ..
         value .. " gems from " .. sending_player_name .. "! You now have " .. new_receiving_balance .. ".")
