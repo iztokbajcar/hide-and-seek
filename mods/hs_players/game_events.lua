@@ -74,6 +74,8 @@ end
 function player_die(player, reason)
     if player_team[player:get_player_name()] == "hider" then
         on_hider_death(player)
+    elseif player_team[player:get_player_name()] == "seeker" then
+        on_seeker_death(player)
     end
 end
 
@@ -97,20 +99,19 @@ function on_lobby_start(player)
 
     unhide_player(player)
 
-    -- if the lobby state has been triggered by the last
-    -- hider dying, that hider would be teleported to the lobby
-    -- while dead; to make the change less abrupt, let's leave the
-    -- dead player on the game map and leave the lobby spawning to
-    -- the player_respawn function
+    -- if the lobby state has been triggered by a premature win
+    -- (the last member of a team dying), that player would be
+    -- teleported to the lobby while dead; to make the change
+    -- less abrupt, let's leave the dead player on the game map and
+    -- leave the lobby spawning to the player_respawn function
     core.log("Player HP: " .. player:get_hp())
     if player:get_hp() > 0 then
         spawn_player_in_lobby(player)
+        restore_player_hp(player)
     end
 
     -- clear objects (e.g. potential leftover disguise entities on the map)
     core.clear_objects()
-
-    restore_player_hp(player)
 end
 
 function on_hiding_start(player, force_team)

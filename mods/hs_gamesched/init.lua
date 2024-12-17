@@ -48,6 +48,15 @@ function on_seeker_win()
     hs_players.game_state_callback()
 end
 
+function on_hider_win()
+    hs_utils.send_server_message("Hiders win!")
+    hs_gamesched.state = hs_gamesched.STATE_LOBBY
+    hs_gamesched.timer_value = LOBBY_DURATION
+    hs_players.hider_win_callback()
+    hs_players.game_state_callback()
+end
+
 core.register_globalstep(global_step)
 
 hs_gamesched.on_seeker_win = on_seeker_win
+hs_gamesched.on_hider_win = on_hider_win
