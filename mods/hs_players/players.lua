@@ -46,3 +46,7 @@ function add_player_to_game(player, team)
     end
     update_hud_for_round(player)
 end
+
+function restore_player_hp(player)
+    player:set_hp(player:get_properties()["hp_max"])
+end

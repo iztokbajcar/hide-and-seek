@@ -109,6 +109,8 @@ function on_lobby_start(player)
 
     -- clear objects (e.g. potential leftover disguise entities on the map)
     core.clear_objects()
+
+    restore_player_hp(player)
 end
 
 function on_hiding_start(player, force_team)
@@ -127,6 +129,8 @@ function on_hiding_start(player, force_team)
     if player_team[player:get_player_name()] == "hider" then
         spawn_player_in_game_map(player)
     end
+
+    restore_player_hp(player)
 end
 
 function on_seeking_start(player)
