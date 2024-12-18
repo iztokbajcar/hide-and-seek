@@ -32,7 +32,12 @@ function remove_from_seekers(player)
     core.log(player:get_player_name() .. " is no longer a seeker")
 
     -- update the seeker count HUD text for all players
-    for _, player in ipairs(core.get_connected_players()) do
-        update_seeker_count_text(player, num_seekers)
+    if
+        hs_gamesched.state == hs_gamesched.STATE_HIDING
+        or hs_gamesched.state == hs_gamesched.STATE_SEEKING
+    then
+        for _, player in ipairs(core.get_connected_players()) do
+            update_seeker_count_text(player, num_seekers)
+        end
     end
 end

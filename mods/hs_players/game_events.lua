@@ -61,6 +61,8 @@ end
 function player_respawn(player)
     if hs_gamesched.state == hs_gamesched.STATE_LOBBY then
         on_lobby_start(player)
+    elseif hs_gamesched.state == hs_gamesched.STATE_AFTERROUND then
+        on_afterround_start(player)
     else
         -- if the player was a hider, remove them from the team
         if player_team[player:get_player_name()] == "hider" then
@@ -72,10 +74,15 @@ function player_respawn(player)
 end
 
 function player_die(player, reason)
-    if player_team[player:get_player_name()] == "hider" then
-        on_hider_death(player)
-    elseif player_team[player:get_player_name()] == "seeker" then
-        on_seeker_death(player)
+    if
+        hs_gamesched.state == hs_gamesched.STATE_HIDING
+        or hs_gamesched.state == hs_gamesched.STATE_SEEKING
+    then
+        if player_team[player:get_player_name()] == "hider" then
+            on_hider_death(player)
+        elseif player_team[player:get_player_name()] == "seeker" then
+            on_seeker_death(player)
+        end
     end
 end
 
@@ -144,6 +151,11 @@ function on_seeking_start(player)
     end
 end
 
+function on_afterround_start(player)
+    -- update HUD
+    update_hud_for_afterround(player)
+end
+
 function timer_callback()
     -- update timer for all players
     for _, player in ipairs(core.get_connected_players()) do
@@ -193,6 +205,10 @@ function game_state_callback()
     elseif hs_gamesched.state == hs_gamesched.STATE_SEEKING then
         for _, player in ipairs(core.get_connected_players()) do
             on_seeking_start(player)
+        end
+    elseif hs_gamesched.state == hs_gamesched.STATE_AFTERROUND then
+        for _, player in ipairs(core.get_connected_players()) do
+            on_afterround_start(player)
         end
     else
         core.log("warning", "Unknown game state: " .. hs_gamesched.state)

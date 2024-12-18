@@ -3,10 +3,12 @@ hs_gamesched = {}
 hs_gamesched.STATE_LOBBY = "STATE_LOBBY"
 hs_gamesched.STATE_HIDING = "STATE_HIDING"
 hs_gamesched.STATE_SEEKING = "STATE_SEEKING"
+hs_gamesched.STATE_AFTERROUND = "STATE_AFTERROUND"
 
 local LOBBY_DURATION = 60
 local HIDE_DURATION = 30
 local SEEK_DURATION = 30 -- 360
+local AFTER_DURATION = 15
 
 hs_gamesched.timer_value = LOBBY_DURATION
 hs_gamesched.state = hs_gamesched.STATE_LOBBY
@@ -32,9 +34,14 @@ function check_for_state_change()
             hs_players.game_state_callback()
         elseif hs_gamesched.state == hs_gamesched.STATE_SEEKING then
             hs_utils.send_server_message("Hiders win!")
+            hs_gamesched.state = hs_gamesched.STATE_AFTERROUND
+            hs_gamesched.timer_value = AFTER_DURATION
+            hs_players.hider_win_callback()
+            hs_players.game_state_callback()
+        elseif hs_gamesched.state == hs_gamesched.STATE_AFTERROUND then
+            hs_utils.send_server_message("Lobby time started.")
             hs_gamesched.state = hs_gamesched.STATE_LOBBY
             hs_gamesched.timer_value = LOBBY_DURATION
-            hs_players.hider_win_callback()
             hs_players.game_state_callback()
         end
     end
@@ -42,16 +49,16 @@ end
 
 function on_seeker_win()
     hs_utils.send_server_message("Seekers win!")
-    hs_gamesched.state = hs_gamesched.STATE_LOBBY
-    hs_gamesched.timer_value = LOBBY_DURATION
+    hs_gamesched.state = hs_gamesched.STATE_AFTERROUND
+    hs_gamesched.timer_value = AFTER_DURATION
     hs_players.seeker_win_callback()
     hs_players.game_state_callback()
 end
 
 function on_hider_win()
     hs_utils.send_server_message("Hiders win!")
-    hs_gamesched.state = hs_gamesched.STATE_LOBBY
-    hs_gamesched.timer_value = LOBBY_DURATION
+    hs_gamesched.state = hs_gamesched.STATE_AFTERROUND
+    hs_gamesched.timer_value = AFTER_DURATION
     hs_players.hider_win_callback()
     hs_players.game_state_callback()
 end

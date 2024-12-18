@@ -292,8 +292,13 @@ function remove_from_hiders(player)
     core.log(player_name .. " is no longer a hider")
 
     -- update the hider count HUD text for all players
-    for _, player in ipairs(core.get_connected_players()) do
-        update_hider_count_text(player, num_hiders)
+    if
+        hs_gamesched.state == hs_gamesched.STATE_HIDING
+        or hs_gamesched.state == hs_gamesched.STATE_SEEKING
+    then
+        for _, player in ipairs(core.get_connected_players()) do
+            update_hider_count_text(player, num_hiders)
+        end
     end
 end
 

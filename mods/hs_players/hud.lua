@@ -178,3 +178,12 @@ function update_hud_for_round(player)
     update_seeker_count_text(player, num_seekers)
     update_seeker_count_desc_text(player, "seeker(s)")
 end
+
+function update_hud_for_afterround(player)
+    update_game_state_hud_text(player, "Round ended")
+    update_team_hud_text(player, "")
+    update_hider_count_text(player, "")
+    update_hider_count_desc_text(player, "")
+    update_seeker_count_text(player, "")
+    update_seeker_count_desc_text(player, "")
+end
