@@ -7,8 +7,29 @@ hs_gamesched.STATE_AFTERROUND = "STATE_AFTERROUND"
 
 local LOBBY_DURATION = 60
 local HIDE_DURATION = 30
-local SEEK_DURATION = 30 -- 360
+local SEEK_DURATION = 360
 local AFTER_DURATION = 15
+
+-- if duration settings exist, use those, otherwise
+-- use the defaults
+local lobby_duration_setting = tonumber(core.settings:get("hs_lobby_duration"))
+local hide_duration_setting = tonumber(core.settings:get("hs_hide_duration"))
+local seek_duration_setting = tonumber(core.settings:get("hs_seek_duration"))
+local after_duration_setting = tonumber(core.settings:get("hs_after_duration"))
+hs_utils.send_server_message(lobby_duration_setting)
+
+if lobby_duration_setting then
+    LOBBY_DURATION = lobby_duration_setting
+end
+if hide_duration_setting then
+    HIDE_DURATION = hide_duration_setting
+end
+if seek_duration_setting then
+    SEEK_DURATION = seek_duration_setting
+end
+if after_duration_setting then
+    AFTER_DURATION = after_duration_setting
+end
 
 hs_gamesched.timer_value = LOBBY_DURATION
 hs_gamesched.state = hs_gamesched.STATE_LOBBY

@@ -1,0 +1,4 @@
+hs_lobby_duration (Lobby duration) int 60 1 600
+hs_hide_duration (Hide duration) int 30 1 600
+hs_seek_duration (Seek duration) int 360 1 600
+hs_after_duration (After duration) int 15 1 600
